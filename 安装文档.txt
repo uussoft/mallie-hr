@@ -1,0 +1,56 @@
+1、安装Symfony-demo
+--composer create-project symfony/symfony-demo
+
+2、安装Encore，Assets管理
+--安装这个之前必须安装Node.js和Yarn包管理器
+--composer require symfony/webpack-encore-pack
+必须安装  --yarn install --ignore-engines 
+修改yarn的仓库地址镜像
+yarn config set registry https://registry.npm.taobao.org -g
+修改node-sass的镜像  
+yarn config set sass_binary_site http://cdn.npm.taobao.org/dist/node-sass -g
+
+才可以使用####compile assets once
+----yarn encore dev
+
+####or recompile assets automatically when files change
+----yarn encore dev --watch
+
+####on deploy,create a production build
+----yarn encore production
+
+3、安装环境检查
+composer require symfony/requirements-checker
+检查完成后，卸载
+composer remove symfony/requirements-checker
+
+4、配置完成数据库可以创建数据库
+php bin/console doctrine:database:create
+
+5、根据实体创建migrations
+php bin/console make:migration
+
+5、数据迁移
+php bin/console doctrine:migrations:migrate
+
+6、导入基础数据
+php bin/console doctrine:fixtures:load
+
+7、创建实体
+php bin/console make:entity
+
+
+
+创建命令：
+php bin/console make:migration  
+
+查询数据库：
+php bin/console doctrine:query:sql 'SELECT * FROM product'
+
+
+1、获取各个Bundle的设置指导：
+php bin/console config:dump-reference  %bundleName%
+
+2、查看应用程序有哪些服务
+php bin/console debug:autowiring
+

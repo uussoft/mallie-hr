@@ -1,0 +1,26 @@
+﻿1、获取各个Bundle的设置指导：
+php bin/console config:dump-reference  %bundleName%
+
+2、查看应用程序有哪些服务
+php bin/console debug:autowiring
+
+数据库迁移命令：
+doctrine:migrations:diff     Generate a migration by comparing your current database to your mapping information.
+doctrine:migrations:execute  Execute a single migration version up or down manually.
+doctrine:migrations:generate Generate a blank migration class.
+doctrine:migrations:migrate  Execute a migration to a specified version or the latest available version.
+doctrine:migrations:status   View the status of a set of migrations.
+doctrine:migrations:version  Manually add and delete migration versions from the version table.
+
+核心Kernel有哪些Parmeters
+'kernel.root_dir' => realpath($this->rootDir) ?: $this->rootDir,
+'kernel.project_dir' => realpath($this->getProjectDir()) ?: $this->getProjectDir(),
+'kernel.environment' => $this->environment,
+'kernel.debug' => $this->debug,
+'kernel.name' => $this->name,
+'kernel.cache_dir' => realpath($cacheDir = $this->warmupDir ?: $this->getCacheDir()) ?: $cacheDir,
+'kernel.logs_dir' => realpath($this->getLogDir()) ?: $this->getLogDir(),
+'kernel.bundles' => $bundles,
+'kernel.bundles_metadata' => $bundlesMetadata,
+'kernel.charset' => $this->getCharset(),
+'kernel.container_class' => $this->getContainerClass(),
