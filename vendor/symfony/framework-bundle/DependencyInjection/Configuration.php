@@ -130,7 +130,7 @@ class Configuration implements ConfigurationInterface
                     ->canBeDisabled()
                     ->children()
                         ->scalarNode('vault_directory')->defaultValue('%kernel.project_dir%/config/secrets/%kernel.environment%')->cannotBeEmpty()->end()
-                        ->scalarNode('local_dotenv_file')->defaultValue('%kernel.project_dir%/.env.local')->end()
+                        ->scalarNode('local_dotenv_file')->defaultValue('%kernel.project_dir%/.env.%kernel.environment%.local')->end()
                         ->scalarNode('decryption_env_var')->defaultValue('base64:default::SYMFONY_DECRYPTION_SECRET')->end()
                     ->end()
                 ->end()
@@ -470,6 +470,10 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('resource')->isRequired()->end()
                         ->scalarNode('type')->end()
+                        ->scalarNode('default_uri')
+                            ->info('The default URI used to generate URLs in a non-HTTP context')
+                            ->defaultNull()
+                        ->end()
                         ->scalarNode('http_port')->defaultValue(80)->end()
                         ->scalarNode('https_port')->defaultValue(443)->end()
                         ->scalarNode('strict_requirements')
@@ -481,7 +485,7 @@ class Configuration implements ConfigurationInterface
                             )
                             ->defaultTrue()
                         ->end()
-                        ->booleanNode('utf8')->defaultFalse()->end()
+                        ->booleanNode('utf8')->defaultNull()->end()
                     ->end()
                 ->end()
             ->end()
@@ -660,6 +664,7 @@ class Configuration implements ConfigurationInterface
                     ->{!class_exists(FullStack::class) && class_exists(Translator::class) ? 'canBeDisabled' : 'canBeEnabled'}()
                     ->fixXmlConfig('fallback')
                     ->fixXmlConfig('path')
+                    ->fixXmlConfig('enabled_locale')
                     ->children()
                         ->arrayNode('fallbacks')
                             ->info('Defaults to the value of "default_locale".')
@@ -676,6 +681,10 @@ class Configuration implements ConfigurationInterface
                         ->end()
                         ->arrayNode('paths')
                             ->prototype('scalar')->end()
+                        ->end()
+                        ->arrayNode('enabled_locales')
+                            ->prototype('scalar')->end()
+                            ->defaultValue([])
                         ->end()
                     ->end()
                 ->end()
@@ -724,6 +733,11 @@ class Configuration implements ConfigurationInterface
                             ->end()
                         ->end()
                         ->arrayNode('auto_mapping')
+                            ->info('A collection of namespaces for which auto-mapping will be enabled by default, or null to opt-in with the EnableAutoMapping constraint.')
+                            ->example([
+                                'App\\Entity\\' => [],
+                                'App\\WithSpecificLoaders\\' => ['validator.property_info_loader'],
+                            ])
                             ->useAttributeAsKey('namespace')
                             ->normalizeKeys(false)
                             ->beforeNormalization()
@@ -1051,6 +1065,10 @@ class Configuration implements ConfigurationInterface
                                     if (!\is_array($config)) {
                                         return [];
                                     }
+                                    // If XML config with only one routing attribute
+                                    if (2 === \count($config) && isset($config['message-class']) && isset($config['sender'])) {
+                                        $config = [0 => $config];
+                                    }
 
                                     $newConfig = [];
                                     foreach ($config as $k => $v) {
@@ -1256,7 +1274,7 @@ class Configuration implements ConfigurationInterface
                                             if (!\is_array($config)) {
                                                 return [];
                                             }
-                                            if (!isset($config['host'])) {
+                                            if (!isset($config['host'], $config['value']) || \count($config) > 2) {
                                                 return $config;
                                             }
 
@@ -1336,7 +1354,7 @@ class Configuration implements ConfigurationInterface
                                     ->thenInvalid('Either "scope" or "base_uri" should be defined.')
                                 ->end()
                                 ->validate()
-                                    ->ifTrue(function ($v) { return isset($v['query']) && !isset($v['base_uri']); })
+                                    ->ifTrue(function ($v) { return !empty($v['query']) && !isset($v['base_uri']); })
                                     ->thenInvalid('"query" applies to "base_uri" but no base URI is defined.')
                                 ->end()
                                 ->children()
@@ -1365,7 +1383,7 @@ class Configuration implements ConfigurationInterface
                                                 if (!\is_array($config)) {
                                                     return [];
                                                 }
-                                                if (!isset($config['key'])) {
+                                                if (!isset($config['key'], $config['value']) || \count($config) > 2) {
                                                     return $config;
                                                 }
 
@@ -1395,7 +1413,7 @@ class Configuration implements ConfigurationInterface
                                                 if (!\is_array($config)) {
                                                     return [];
                                                 }
-                                                if (!isset($config['host'])) {
+                                                if (!isset($config['host'], $config['value']) || \count($config) > 2) {
                                                     return $config;
                                                 }
 
@@ -1475,6 +1493,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                     ->fixXmlConfig('transport')
                     ->children()
+                        ->scalarNode('message_bus')->defaultNull()->info('The message bus to use. Defaults to the default bus if the Messenger component is installed.')->end()
                         ->scalarNode('dsn')->defaultNull()->end()
                         ->arrayNode('transports')
                             ->useAttributeAsKey('name')

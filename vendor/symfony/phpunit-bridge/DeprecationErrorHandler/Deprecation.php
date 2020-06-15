@@ -44,6 +44,8 @@ class Deprecation
      */
     private static $internalPaths = [];
 
+    private $originalFilesStack;
+
     /**
      * @param string $message
      * @param string $file
@@ -64,6 +66,7 @@ class Deprecation
                 $this->message = $parsedMsg['deprecation'];
                 $this->originClass = $parsedMsg['class'];
                 $this->originMethod = $parsedMsg['method'];
+                $this->originalFilesStack = $parsedMsg['files_stack'];
                 // If the deprecation has been triggered via
                 // \Symfony\Bridge\PhpUnit\Legacy\SymfonyTestsListenerTrait::endTest()
                 // then we need to use the serialized information to determine
@@ -106,7 +109,7 @@ class Deprecation
     public function originatingClass()
     {
         if (null === $this->originClass) {
-            throw new \LogicException('Check with originatesFromAnObject() before calling this method');
+            throw new \LogicException('Check with originatesFromAnObject() before calling this method.');
         }
 
         return $this->originClass;
@@ -118,7 +121,7 @@ class Deprecation
     public function originatingMethod()
     {
         if (null === $this->originMethod) {
-            throw new \LogicException('Check with originatesFromAnObject() before calling this method');
+            throw new \LogicException('Check with originatesFromAnObject() before calling this method.');
         }
 
         return $this->originMethod;
@@ -178,14 +181,8 @@ class Deprecation
             return self::TYPE_UNDETERMINED;
         }
         $erroringFile = $erroringPackage = null;
-        foreach ($this->trace as $line) {
-            if (\in_array($line['function'], ['require', 'require_once', 'include', 'include_once'], true)) {
-                continue;
-            }
-            if (!isset($line['file'])) {
-                continue;
-            }
-            $file = $line['file'];
+
+        foreach ($this->getOriginalFilesStack() as $file) {
             if ('-' === $file || 'Standard input code' === $file || !realpath($file)) {
                 continue;
             }
@@ -209,6 +206,22 @@ class Deprecation
         return self::TYPE_DIRECT;
     }
 
+    private function getOriginalFilesStack()
+    {
+        if (null === $this->originalFilesStack) {
+            $this->originalFilesStack = [];
+            foreach ($this->trace as $frame) {
+                if (!isset($frame['file']) || \in_array($frame['function'], ['require', 'require_once', 'include', 'include_once'], true)) {
+                    continue;
+                }
+
+                $this->originalFilesStack[] = $frame['file'];
+            }
+        }
+
+        return $this->originalFilesStack;
+    }
+
     /**
      * getPathType() should always be called prior to calling this method.
      *
@@ -224,7 +237,7 @@ class Deprecation
                 $relativePath = substr($path, \strlen($vendorRoot) + 1);
                 $vendor = strstr($relativePath, \DIRECTORY_SEPARATOR, true);
                 if (false === $vendor) {
-                    throw new \RuntimeException(sprintf('Could not find directory separator "%s" in path "%s"', \DIRECTORY_SEPARATOR, $relativePath));
+                    throw new \RuntimeException(sprintf('Could not find directory separator "%s" in path "%s".', \DIRECTORY_SEPARATOR, $relativePath));
                 }
 
                 return rtrim($vendor.'/'.strstr(substr(
@@ -234,7 +247,7 @@ class Deprecation
             }
         }
 
-        throw new \RuntimeException(sprintf('No vendors found for path "%s"', $path));
+        throw new \RuntimeException(sprintf('No vendors found for path "%s".', $path));
     }
 
     /**

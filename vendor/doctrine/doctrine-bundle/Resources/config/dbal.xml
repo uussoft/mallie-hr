@@ -41,6 +41,7 @@
         <service id="data_collector.doctrine" class="%doctrine.data_collector.class%" public="false">
             <tag name="data_collector" template="@Doctrine/Collector/db.html.twig" id="db" priority="250" />
             <argument type="service" id="doctrine" />
+            <argument>true</argument>
         </service>
 
         <service id="doctrine.dbal.connection_factory" class="%doctrine.dbal.connection_factory.class%">
@@ -63,7 +64,9 @@
             <argument>%doctrine.entity_managers%</argument>
             <argument>%doctrine.default_connection%</argument>
             <argument>%doctrine.default_entity_manager%</argument>
+            <tag name="kernel.reset" method="reset" />
         </service>
+        <service id="Doctrine\Persistence\ManagerRegistry" alias="doctrine" public="false" />
         <service id="Doctrine\Common\Persistence\ManagerRegistry" alias="doctrine" public="false" />
 
         <service id="doctrine.twig.doctrine_extension" class="Doctrine\Bundle\DoctrineBundle\Twig\DoctrineExtension" public="false">

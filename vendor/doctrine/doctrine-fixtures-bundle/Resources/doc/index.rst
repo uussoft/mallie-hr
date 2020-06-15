@@ -53,7 +53,7 @@ Create a fixtures class and start adding products::
 
     use App\Entity\Product;
     use Doctrine\Bundle\FixturesBundle\Fixture;
-    use Doctrine\Common\Persistence\ObjectManager;
+    use Doctrine\Persistence\ObjectManager;
 
     class AppFixtures extends Fixture
     {
@@ -131,10 +131,6 @@ injection::
         $manager->persist($user);
         $manager->flush();
     }
-
-You can also access the container via the ``$this->container`` property.
-But remember that not *all* services (i.e. private services) can be accessed
-directly via the container.
 
 .. _multiple-files:
 

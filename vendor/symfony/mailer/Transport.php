@@ -85,7 +85,7 @@ class Transport
     {
         list($transport, $offset) = $this->parseDsn($dsn);
         if ($offset !== \strlen($dsn)) {
-            throw new InvalidArgumentException(sprintf('The DSN has some garbage at the end: %s.', substr($dsn, $offset)));
+            throw new InvalidArgumentException(sprintf('The DSN has some garbage at the end: "%s".', substr($dsn, $offset)));
         }
 
         return $transport;
@@ -149,7 +149,7 @@ class Transport
         throw new UnsupportedSchemeException($dsn);
     }
 
-    private static function getDefaultFactories(EventDispatcherInterface $dispatcher = null, HttpClientInterface $client = null, LoggerInterface $logger = null): iterable
+    public static function getDefaultFactories(EventDispatcherInterface $dispatcher = null, HttpClientInterface $client = null, LoggerInterface $logger = null): iterable
     {
         foreach (self::FACTORY_CLASSES as $factoryClass) {
             if (class_exists($factoryClass)) {

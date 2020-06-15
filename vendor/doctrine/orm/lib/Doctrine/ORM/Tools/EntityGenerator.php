@@ -26,6 +26,7 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use const E_USER_DEPRECATED;
 use function str_replace;
 use function trigger_error;
+use function var_export;
 
 /**
  * Generic class used to generate PHP5 entity classes from ClassMetadataInfo instances.
@@ -148,7 +149,7 @@ class EntityGenerator
     /**
      * Whether or not to make generated embeddables immutable.
      *
-     * @var boolean.
+     * @var bool
      */
     protected $embeddablesImmutable = false;
 
@@ -341,9 +342,7 @@ public function __construct(<params>)
     {
         @trigger_error(self::class . ' is deprecated and will be removed in Doctrine ORM 3.0', E_USER_DEPRECATED);
 
-        if (version_compare(\Doctrine\Common\Version::VERSION, '2.2.0-DEV', '>=')) {
-            $this->annotationsPrefix = 'ORM\\';
-        }
+        $this->annotationsPrefix = 'ORM\\';
     }
 
     /**
@@ -1165,7 +1164,7 @@ public function __construct(<params>)
         $inheritanceClassMap = [];
 
         foreach ($metadata->discriminatorMap as $type => $class) {
-            $inheritanceClassMap[] .= '"' . $type . '" = "' . $class . '"';
+            $inheritanceClassMap[] = '"' . $type . '" = "' . $class . '"';
         }
 
         return '@' . $this->annotationsPrefix . 'DiscriminatorMap({' . implode(', ', $inheritanceClassMap) . '})';
@@ -1328,9 +1327,17 @@ public function __construct(<params>)
                 continue;
             }
 
+            $defaultValue = '';
+            if (isset($fieldMapping['options']['default'])) {
+                if ($fieldMapping['type'] === 'boolean' && $fieldMapping['options']['default'] === '1') {
+                    $defaultValue = ' = true';
+                } else {
+                    $defaultValue = ' = ' . var_export($fieldMapping['options']['default'], true);
+                }
+            }
+
             $lines[] = $this->generateFieldMappingPropertyDocBlock($fieldMapping, $metadata);
-            $lines[] = $this->spaces . $this->fieldVisibility . ' $' . $fieldMapping['fieldName']
-                     . (isset($fieldMapping['options']['default']) ? ' = ' . var_export($fieldMapping['options']['default'], true) : null) . ";\n";
+            $lines[] = $this->spaces . $this->fieldVisibility . ' $' . $fieldMapping['fieldName'] . $defaultValue . ";\n";
         }
 
         return implode("\n", $lines);
@@ -1459,7 +1466,7 @@ public function __construct(<params>)
         }
 
         if (isset($joinColumn['unique']) && $joinColumn['unique']) {
-            $joinColumnAnnot[] = 'unique=' . ($joinColumn['unique'] ? 'true' : 'false');
+            $joinColumnAnnot[] = 'unique=true';
         }
 
         if (isset($joinColumn['nullable'])) {
@@ -1551,7 +1558,7 @@ public function __construct(<params>)
             }
 
             if (isset($associationMapping['orphanRemoval']) && $associationMapping['orphanRemoval']) {
-                $typeOptions[] = 'orphanRemoval=' . ($associationMapping['orphanRemoval'] ? 'true' : 'false');
+                $typeOptions[] = 'orphanRemoval=true';
             }
 
             if (isset($associationMapping['fetch']) && $associationMapping['fetch'] !== ClassMetadataInfo::FETCH_LAZY) {

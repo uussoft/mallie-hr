@@ -13,6 +13,9 @@
 namespace PhpCsFixer\Fixer\ClassNotation;
 
 use PhpCsFixer\AbstractFixer;
+use PhpCsFixer\Fixer\ConfigurableFixerInterface;
+use PhpCsFixer\FixerConfiguration\FixerConfigurationResolver;
+use PhpCsFixer\FixerConfiguration\FixerOptionBuilder;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\Tokenizer\Tokens;
@@ -20,7 +23,7 @@ use PhpCsFixer\Tokenizer\Tokens;
 /**
  * @author Filippo Tessarotto <zoeslam@gmail.com>
  */
-final class NoUnneededFinalMethodFixer extends AbstractFixer
+final class NoUnneededFinalMethodFixer extends AbstractFixer implements ConfigurableFixerInterface
 {
     /**
      * {@inheritdoc}
@@ -28,25 +31,40 @@ final class NoUnneededFinalMethodFixer extends AbstractFixer
     public function getDefinition()
     {
         return new FixerDefinition(
-            'A final class must not have final methods.',
+            'A `final` class must not have `final` methods and `private` methods must not be `final`.',
             [
                 new CodeSample(
                     '<?php
-final class Foo {
-    final public function foo() {}
+final class Foo
+{
+    final public function foo1() {}
     final protected function bar() {}
     final private function baz() {}
+}
+
+class Bar
+{
+    final private function bar1() {}
 }
 '
                 ),
                 new CodeSample(
                     '<?php
-class Foo {
-    final private function bar() {}
+final class Foo
+{
+    final private function baz() {}
 }
-'
+
+class Bar
+{
+    final private function bar1() {}
+}
+',
+                    ['private_methods' => false]
                 ),
-            ]
+            ],
+            null,
+            'Risky when child class overrides a `private` method.'
         );
     }
 
@@ -56,6 +74,11 @@ class Foo {
     public function isCandidate(Tokens $tokens)
     {
         return $tokens->isAllTokenKindsFound([T_CLASS, T_FINAL]);
+    }
+
+    public function isRisky()
+    {
+        return true;
     }
 
     /**
@@ -75,6 +98,19 @@ class Foo {
 
             $this->fixClass($tokens, $classOpen, $classIsFinal);
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function createConfigurationDefinition()
+    {
+        return new FixerConfigurationResolver([
+            (new FixerOptionBuilder('private_methods', 'Private methods of non-`final` classes must not be declared `final`.'))
+                ->setAllowedTypes(['bool'])
+                ->setDefault(true)
+                ->getOption(),
+        ]);
     }
 
     /**
@@ -101,7 +137,7 @@ class Foo {
                 continue;
             }
 
-            if (!$classIsFinal && !$this->isPrivateMethod($tokens, $index, $classOpenIndex)) {
+            if (!$classIsFinal && (!$this->isPrivateMethod($tokens, $index, $classOpenIndex) || !$this->configuration['private_methods'])) {
                 continue;
             }
 

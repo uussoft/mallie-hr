@@ -32,7 +32,7 @@ use PhpCsFixer\Tokenizer\Tokens;
 final class PhpdocToReturnTypeFixer extends AbstractFixer implements ConfigurableFixerInterface
 {
     /**
-     * @var array<array<int, string>>
+     * @var array<int, array<int, int|string>>
      */
     private $blacklistFuncNames = [
         [T_STRING, '__construct'],
@@ -112,7 +112,7 @@ function my_foo()
                 ),
             ],
             null,
-            '[1] This rule is EXPERIMENTAL and is not covered with backward compatibility promise. [2] `@return` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented. [4] `@inheritdocs` support is under construction.'
+            'This rule is EXPERIMENTAL and [1] is not covered with backward compatibility promise. [2] `@return` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented. [4] `@inheritdocs` support is under construction.'
         );
     }
 
@@ -130,11 +130,12 @@ function my_foo()
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before FullyQualifiedStrictTypesFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAlignFixer, ReturnTypeDeclarationFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        // should be run after PhpdocScalarFixer and PhpdocTypes.
-        // should be run before ReturnTypeDeclarationFixer, FullyQualifiedStrictTypesFixer, NoSuperfluousPhpdocTagsFixer.
         return 13;
     }
 

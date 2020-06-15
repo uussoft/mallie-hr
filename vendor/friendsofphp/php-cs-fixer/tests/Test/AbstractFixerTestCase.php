@@ -12,8 +12,8 @@
 
 namespace PhpCsFixer\Tests\Test;
 
-use PhpCsFixer\Fixer\ConfigurableFixerInterface;
-use PhpCsFixer\Fixer\FixerInterface;
+use PhpCsFixer\AbstractFixer;
+use PhpCsFixer\AbstractProxyFixer;
 use PhpCsFixer\Linter\CachingLinter;
 use PhpCsFixer\Linter\Linter;
 use PhpCsFixer\Linter\LinterInterface;
@@ -33,12 +33,12 @@ abstract class AbstractFixerTestCase extends TestCase
     use IsIdenticalConstraint;
 
     /**
-     * @var LinterInterface
+     * @var null|LinterInterface
      */
     protected $linter;
 
     /**
-     * @var null|ConfigurableFixerInterface|FixerInterface
+     * @var null|AbstractFixer
      */
     protected $fixer;
 
@@ -58,8 +58,31 @@ abstract class AbstractFixerTestCase extends TestCase
         $this->fixer = null;
     }
 
+    final public function testIsRisky()
+    {
+        static::assertInternalType('bool', $this->fixer->isRisky(), sprintf('Return type for ::isRisky of "%s" is invalid.', $this->fixer->getName()));
+
+        if ($this->fixer->isRisky()) {
+            self::assertValidDescription($this->fixer->getName(), 'risky description', $this->fixer->getDefinition()->getRiskyDescription());
+        } else {
+            static::assertNull($this->fixer->getDefinition()->getRiskyDescription(), sprintf('[%s] Fixer is not risky so no description of it expected.', $this->fixer->getName()));
+        }
+
+        if ($this->fixer instanceof AbstractProxyFixer) {
+            return;
+        }
+
+        $reflection = new \ReflectionMethod($this->fixer, 'isRisky');
+
+        // If fixer is not risky then the method `isRisky` from `AbstractFixer` must be used
+        static::assertSame(
+            !$this->fixer->isRisky(),
+            AbstractFixer::class === $reflection->getDeclaringClass()->getName()
+        );
+    }
+
     /**
-     * @return FixerInterface
+     * @return AbstractFixer
      */
     protected function createFixer()
     {
@@ -172,6 +195,8 @@ abstract class AbstractFixerTestCase extends TestCase
         } catch (\Exception $e) {
             return $e->getMessage()."\n\nSource:\n{$source}";
         }
+
+        return null;
     }
 
     /**
@@ -186,5 +211,30 @@ abstract class AbstractFixerTestCase extends TestCase
         }
 
         return $linter;
+    }
+
+    /**
+     * @param string $fixerName
+     * @param string $descriptionType
+     * @param mixed  $description
+     */
+    private static function assertValidDescription($fixerName, $descriptionType, $description)
+    {
+        static::assertInternalType('string', $description);
+        static::assertRegExp('/^[A-Z`][^"]+\.$/', $description, sprintf('[%s] The %s must start with capital letter or a ` and end with dot.', $fixerName, $descriptionType));
+        static::assertNotContains('phpdocs', $description, sprintf('[%s] `PHPDoc` must not be in the plural in %s.', $fixerName, $descriptionType), true);
+        static::assertCorrectCasing($description, 'PHPDoc', sprintf('[%s] `PHPDoc` must be in correct casing in %s.', $fixerName, $descriptionType));
+        static::assertCorrectCasing($description, 'PHPUnit', sprintf('[%s] `PHPUnit` must be in correct casing in %s.', $fixerName, $descriptionType));
+        static::assertFalse(strpos($descriptionType, '``'), sprintf('[%s] The %s must no contain sequential backticks.', $fixerName, $descriptionType));
+    }
+
+    /**
+     * @param string $needle
+     * @param string $haystack
+     * @param string $message
+     */
+    private static function assertCorrectCasing($needle, $haystack, $message)
+    {
+        static::assertSame(substr_count(strtolower($haystack), strtolower($needle)), substr_count($haystack, $needle), $message);
     }
 }

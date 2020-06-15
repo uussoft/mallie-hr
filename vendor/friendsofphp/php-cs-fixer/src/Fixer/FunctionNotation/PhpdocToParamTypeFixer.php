@@ -38,7 +38,7 @@ final class PhpdocToParamTypeFixer extends AbstractFixer implements Configurable
     const MINIMUM_PHP_VERSION = 70000;
 
     /**
-     * @var array<int, string>
+     * @var array{int, string}[]
      */
     private $blacklistFuncNames = [
         [T_STRING, '__clone'],
@@ -82,7 +82,7 @@ function my_foo($bar)
                 ),
             ],
             null,
-            '[1] This rule is EXPERIMENTAL and is not covered with backward compatibility promise. [2] `@param` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented.'
+            'This rule is EXPERIMENTAL and [1] is not covered with backward compatibility promise. [2] `@param` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented.'
         );
     }
 
@@ -96,10 +96,12 @@ function my_foo($bar)
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before NoSuperfluousPhpdocTagsFixer, PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        // should be run before NoSuperfluousPhpdocTagsFixer
         return 8;
     }
 

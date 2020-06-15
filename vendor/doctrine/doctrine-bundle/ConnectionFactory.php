@@ -11,6 +11,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
+use function is_subclass_of;
 
 class ConnectionFactory
 {
@@ -42,12 +43,20 @@ class ConnectionFactory
             $this->initializeTypes();
         }
 
-        $connection = DriverManager::getConnection($params, $config, $eventManager);
-
         if (! isset($params['pdo']) && ! isset($params['charset'])) {
-            $params            = $connection->getParams();
-            $params['charset'] = 'utf8';
-            $driver            = $connection->getDriver();
+            $wrapperClass = null;
+            if (isset($params['wrapperClass'])) {
+                if (! is_subclass_of($params['wrapperClass'], Connection::class)) {
+                    throw DBALException::invalidWrapperClass($params['wrapperClass']);
+                }
+
+                $wrapperClass           = $params['wrapperClass'];
+                $params['wrapperClass'] = null;
+            }
+
+            $connection = DriverManager::getConnection($params, $config, $eventManager);
+            $params     = $connection->getParams();
+            $driver     = $connection->getDriver();
 
             if ($driver instanceof AbstractMySQLDriver) {
                 $params['charset'] = 'utf8mb4';
@@ -55,9 +64,19 @@ class ConnectionFactory
                 if (! isset($params['defaultTableOptions']['collate'])) {
                     $params['defaultTableOptions']['collate'] = 'utf8mb4_unicode_ci';
                 }
+            } else {
+                $params['charset'] = 'utf8';
             }
 
-            $connection = new $connection($params, $driver, $connection->getConfiguration(), $connection->getEventManager());
+            if ($wrapperClass !== null) {
+                $params['wrapperClass'] = $wrapperClass;
+            } else {
+                $wrapperClass = Connection::class;
+            }
+
+            $connection = new $wrapperClass($params, $driver, $config, $eventManager);
+        } else {
+            $connection = DriverManager::getConnection($params, $config, $eventManager);
         }
 
         if (! empty($mappingTypes)) {
@@ -77,17 +96,15 @@ class ConnectionFactory
      * and the platform version is unknown.
      * For details have a look at DoctrineBundle issue #673.
      *
-     * @return AbstractPlatform
-     *
      * @throws DBALException
      */
-    private function getDatabasePlatform(Connection $connection)
+    private function getDatabasePlatform(Connection $connection) : AbstractPlatform
     {
         try {
             return $connection->getDatabasePlatform();
         } catch (DriverException $driverException) {
             throw new DBALException(
-                'An exception occured while establishing a connection to figure out your platform version.' . PHP_EOL .
+                'An exception occurred while establishing a connection to figure out your platform version.' . PHP_EOL .
                 "You can circumvent this by setting a 'server_version' configuration value" . PHP_EOL . PHP_EOL .
                 'For further information have a look at:' . PHP_EOL .
                 'https://github.com/doctrine/DoctrineBundle/issues/673',
@@ -100,7 +117,7 @@ class ConnectionFactory
     /**
      * initialize the types
      */
-    private function initializeTypes()
+    private function initializeTypes() : void
     {
         foreach ($this->typesConfig as $typeName => $typeConfig) {
             if (Type::hasType($typeName)) {

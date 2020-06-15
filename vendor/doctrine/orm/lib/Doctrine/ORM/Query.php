@@ -133,7 +133,7 @@ final class Query extends AbstractQuery
      *
      * @var integer
      */
-    private $_state = self::STATE_CLEAN;
+    private $_state = self::STATE_DIRTY;
 
     /**
      * A snapshot of the parameter types the query was parsed with.
@@ -624,7 +624,7 @@ final class Query extends AbstractQuery
     /**
      * Sets the position of the first result to retrieve (the "offset").
      *
-     * @param integer $firstResult The first result to return.
+     * @param int|null $firstResult The first result to return.
      *
      * @return Query This query object.
      */

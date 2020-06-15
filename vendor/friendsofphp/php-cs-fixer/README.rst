@@ -13,8 +13,8 @@ If you are already using a linter to identify coding standards problems in your
 code, you know that fixing them by hand is tedious, especially on large
 projects. This tool does not only detect them, but also fixes them for you.
 
-The PHP CS Fixer is maintained on GitHub at https://github.com/FriendsOfPHP/PHP-CS-Fixer
-bug reports and ideas about new features are welcome there.
+The PHP CS Fixer is maintained on GitHub at https://github.com/FriendsOfPHP/PHP-CS-Fixer.
+Bug reports and ideas about new features are welcome there.
 
 You can talk to us at https://gitter.im/PHP-CS-Fixer/Lobby about the project,
 configuration, possible improvements, ideas and questions, please visit us!
@@ -46,7 +46,7 @@ or with specified version:
 
 .. code-block:: bash
 
-    $ wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v2.16.1/php-cs-fixer.phar -O php-cs-fixer
+    $ wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v2.16.3/php-cs-fixer.phar -O php-cs-fixer
 
 or with curl:
 
@@ -166,8 +166,16 @@ NOTE: the output for the following formats are generated in accordance with XML 
 * ``junit`` follows the `JUnit xml schema from Jenkins </doc/junit-10.xsd>`_
 * ``checkstyle`` follows the common `"checkstyle" xml schema </doc/checkstyle.xsd>`_
 
+The ``--quiet`` Do not output any message.
 
 The ``--verbose`` option will show the applied rules. When using the ``txt`` format it will also display progress notifications.
+
+NOTE: if there is an error like "errors reported during linting after fixing", you can use this to be even more verbose for debugging purpose
+
+* ``--verbose=0`` or no option: normal
+* ``--verbose``, ``--verbose=1``, ``-v``: verbose
+* ``--verbose=2``, ``-vv``: very verbose
+* ``--verbose=3``, ``-vvv``: debug
 
 The ``--rules`` option limits the rules to apply to the
 project:
@@ -243,6 +251,21 @@ would be default in next MAJOR release (unified differ, dots, full-width progres
 
     $ PHP_CS_FIXER_FUTURE_MODE=1 php php-cs-fixer.phar fix -v --diff
 
+Rules
+-----
+
+Use the following command to quickly understand what a rule will do to your code:
+
+.. code-block:: bash
+
+    $ php php-cs-fixer.phar describe align_multiline_comment
+
+To visualize all the rules that belong to a ruleset:
+
+.. code-block:: bash
+
+    $ php php-cs-fixer.phar describe @PSR2
+
 Choose from the list of available rules:
 
 * **align_multiline_comment** [@PhpCsFixer]
@@ -261,6 +284,12 @@ Choose from the list of available rules:
 
   Each element of an array must be indented exactly once.
 
+* **array_push** [@Symfony:risky, @PhpCsFixer:risky]
+
+  Converts simple usages of ``array_push($x, $y);`` to ``$x[] = $y;``.
+
+  *Risky rule: risky when the function ``array_push`` is overridden.*
+
 * **array_syntax** [@Symfony, @PhpCsFixer]
 
   PHP arrays should be declared using the configured syntax.
@@ -270,7 +299,7 @@ Choose from the list of available rules:
   - ``syntax`` (``'long'``, ``'short'``): whether to use the ``long`` or ``short`` array
     syntax; defaults to ``'long'``
 
-* **backtick_to_shell_exec**
+* **backtick_to_shell_exec** [@Symfony, @PhpCsFixer]
 
   Converts backtick operators to ``shell_exec`` calls.
 
@@ -304,9 +333,9 @@ Choose from the list of available rules:
   - ``statements`` (a subset of ``['break', 'case', 'continue', 'declare',
     'default', 'die', 'do', 'exit', 'for', 'foreach', 'goto', 'if',
     'include', 'include_once', 'require', 'require_once', 'return',
-    'switch', 'throw', 'try', 'while', 'yield']``): list of statements which
-    must be preceded by an empty line; defaults to ``['break', 'continue',
-    'declare', 'return', 'throw', 'try']``
+    'switch', 'throw', 'try', 'while', 'yield', 'yield_from']``): list of
+    statements which must be preceded by an empty line; defaults to
+    ``['break', 'continue', 'declare', 'return', 'throw', 'try']``
 
 * **braces** [@PSR2, @Symfony, @PhpCsFixer]
 
@@ -315,6 +344,9 @@ Choose from the list of available rules:
 
   Configuration options:
 
+  - ``allow_single_line_anonymous_class_with_empty_body`` (``bool``): whether single
+    line anonymous class with empty body notation should be allowed;
+    defaults to ``false``
   - ``allow_single_line_closure`` (``bool``): whether single line lambda notation
     should be allowed; defaults to ``false``
   - ``position_after_anonymous_constructs`` (``'next'``, ``'same'``): whether the
@@ -339,14 +371,14 @@ Choose from the list of available rules:
 
 * **class_attributes_separation** [@Symfony, @PhpCsFixer]
 
-  Class, trait and interface elements must be separated with one blank
-  line.
+  Class, trait and interface elements must be separated with one or none
+  blank line.
 
   Configuration options:
 
-  - ``elements`` (a subset of ``['const', 'method', 'property']``): list of classy
-    elements; 'const', 'method', 'property'; defaults to ``['const',
-    'method', 'property']``
+  - ``elements`` (``array``): dictionary of ``const|method|property`` => ``none|one``
+    values; defaults to ``['const' => 'one', 'method' => 'one', 'property' =>
+    'one']``
 
 * **class_definition** [@PSR2, @Symfony, @PhpCsFixer]
 
@@ -376,7 +408,7 @@ Choose from the list of available rules:
 
   Calling ``unset`` on multiple items should be done in one call.
 
-* **combine_nested_dirname** [@PHP70Migration:risky, @PHP71Migration:risky]
+* **combine_nested_dirname** [@Symfony:risky, @PhpCsFixer:risky, @PHP70Migration:risky, @PHP71Migration:risky, @PHP74Migration:risky]
 
   Replace multiple nested calls of ``dirname`` by only one call with second
   ``$level`` parameter. Requires PHP >= 7.0.
@@ -433,7 +465,7 @@ Choose from the list of available rules:
   - ``space`` (``'none'``, ``'single'``): spacing to apply around the equal sign;
     defaults to ``'none'``
 
-* **declare_strict_types** [@PHP70Migration:risky, @PHP71Migration:risky]
+* **declare_strict_types** [@PHP70Migration:risky, @PHP71Migration:risky, @PHP74Migration:risky]
 
   Force strict types declaration in all files. Requires PHP >= 7.0.
 
@@ -576,6 +608,20 @@ Choose from the list of available rules:
     'SuppressWarnings', 'noinspection', 'package_version', 'enduml',
     'startuml', 'fix', 'FIXME', 'fixme', 'override']``
 
+* **echo_tag_syntax** [@Symfony, @PhpCsFixer]
+
+  Replaces short-echo ``<?=`` with long format ``<?php echo``/``<?php print``
+  syntax, or vice-versa.
+
+  Configuration options:
+
+  - ``format`` (``'long'``, ``'short'``): the desired language construct; defaults to
+    ``'long'``
+  - ``long_function`` (``'echo'``, ``'print'``): the function to be used to expand the
+    short echo tags; defaults to ``'echo'``
+  - ``shorten_simple_statements_only`` (``bool``): render short-echo tags only in
+    case of simple code; defaults to ``true``
+
 * **elseif** [@PSR2, @Symfony, @PhpCsFixer]
 
   The keyword ``elseif`` should be used instead of ``else if`` so that all
@@ -648,7 +694,8 @@ Choose from the list of available rules:
   - ``annotation_black_list`` (``array``): class level annotations tags that must be
     omitted to fix the class, even if all of the white list ones are used
     as well. (case insensitive); defaults to ``['@final', '@Entity',
-    '@ORM\\Entity']``; DEPRECATED alias: ``annotation-black-list``
+    '@ORM\\Entity', '@ORM\\Mapping\\Entity', '@Mapping\\Entity']``;
+    DEPRECATED alias: ``annotation-black-list``
   - ``annotation_white_list`` (``array``): class level annotations tags that must be
     set in order to fix the class. (case insensitive); defaults to
     ``['@internal']``; DEPRECATED alias: ``annotation-white-list``
@@ -665,6 +712,7 @@ Choose from the list of available rules:
 * **final_static_access**
 
   Converts ``static`` access to ``self`` access in ``final`` classes.
+  DEPRECATED: use ``self_static_accessor`` instead.
 
 * **fopen_flag_order** [@Symfony:risky, @PhpCsFixer:risky]
 
@@ -689,7 +737,7 @@ Choose from the list of available rules:
   PHP code must use the long ``<?php`` tags or short-echo ``<?=`` tags and not
   other tag variations.
 
-* **fully_qualified_strict_types** [@PhpCsFixer]
+* **fully_qualified_strict_types** [@Symfony, @PhpCsFixer]
 
   Transforms imported FQCN parameters and return types in function
   arguments to short version.
@@ -712,9 +760,9 @@ Choose from the list of available rules:
   Configuration options:
 
   - ``functions`` (a subset of ``['get_called_class', 'get_class',
-    'php_sapi_name', 'phpversion', 'pi']``): list of function names to fix;
-    defaults to ``['get_called_class', 'get_class', 'php_sapi_name',
-    'phpversion', 'pi']``
+    'get_class_this', 'php_sapi_name', 'phpversion', 'pi']``): list of
+    function names to fix; defaults to ``['get_called_class', 'get_class',
+    'get_class_this', 'php_sapi_name', 'phpversion', 'pi']``
 
 * **function_typehint_space** [@Symfony, @PhpCsFixer]
 
@@ -756,15 +804,21 @@ Choose from the list of available rules:
   - ``separate`` (``'both'``, ``'bottom'``, ``'none'``, ``'top'``): whether the header should be
     separated from the file content with a new line; defaults to ``'both'``
 
-* **heredoc_indentation** [@PHP73Migration]
+* **heredoc_indentation** [@PHP73Migration, @PHP74Migration]
 
   Heredoc/nowdoc content must be properly indented. Requires PHP >= 7.3.
+
+  Configuration options:
+
+  - ``indentation`` (``'same_as_start'``, ``'start_plus_one'``): whether the indentation
+    should be the same as in the start token line or one level more;
+    defaults to ``'start_plus_one'``
 
 * **heredoc_to_nowdoc** [@PhpCsFixer]
 
   Convert ``heredoc`` to ``nowdoc`` where possible.
 
-* **implode_call** [@Symfony:risky, @PhpCsFixer:risky]
+* **implode_call** [@Symfony:risky, @PhpCsFixer:risky, @PHP74Migration:risky]
 
   Function ``implode`` must be called with 2 arguments in the documented
   order.
@@ -796,11 +850,15 @@ Choose from the list of available rules:
 
   *Risky rule: risky when the function ``is_null`` is overridden.*
 
+* **lambda_not_used_import** [@Symfony, @PhpCsFixer]
+
+  Lambda must not import variables it doesn't use.
+
 * **line_ending** [@PSR2, @Symfony, @PhpCsFixer]
 
   All PHP files must use same line ending.
 
-* **linebreak_after_opening_tag**
+* **linebreak_after_opening_tag** [@Symfony, @PhpCsFixer]
 
   Ensure there is no code on the same line as the PHP open tag.
 
@@ -814,7 +872,7 @@ Choose from the list of available rules:
   - ``syntax`` (``'long'``, ``'short'``): whether to use the ``long`` or ``short`` ``list``
     syntax; defaults to ``'long'``
 
-* **logical_operators** [@PhpCsFixer:risky]
+* **logical_operators** [@Symfony:risky, @PhpCsFixer:risky]
 
   Use ``&&`` and ``||`` logical operators instead of ``and`` and ``or``.
 
@@ -915,6 +973,8 @@ Choose from the list of available rules:
   - ``include`` (``array``): list of additional constants to fix; defaults to ``[]``
   - ``scope`` (``'all'``, ``'namespaced'``): only fix constant invocations that are made
     within a namespace or fix all; defaults to ``'all'``
+  - ``strict`` (``bool``): whether leading ``\`` of constant invocation not meant to
+    have it should be removed; defaults to ``false``
 
 * **native_function_casing** [@Symfony, @PhpCsFixer]
 
@@ -946,7 +1006,7 @@ Choose from the list of available rules:
 
   All instances created with new keyword must be followed by braces.
 
-* **no_alias_functions** [@Symfony:risky, @PhpCsFixer:risky]
+* **no_alias_functions** [@Symfony:risky, @PhpCsFixer:risky, @PHP74Migration:risky]
 
   Master functions shall be used instead of aliases.
 
@@ -959,11 +1019,15 @@ Choose from the list of available rules:
     (IMAP functions), ``@mbreg`` (from ``ext-mbstring``) ``@all`` (all listed
     sets); defaults to ``['@internal', '@IMAP']``
 
-* **no_alternative_syntax** [@PhpCsFixer]
+* **no_alias_language_construct_call** [@Symfony, @PhpCsFixer]
+
+  Master language constructs shall be used instead of aliases.
+
+* **no_alternative_syntax** [@Symfony, @PhpCsFixer]
 
   Replace control structure alternative syntax to use braces.
 
-* **no_binary_string** [@PhpCsFixer]
+* **no_binary_string** [@Symfony, @PhpCsFixer]
 
   There should not be a binary flag before strings.
 
@@ -1049,7 +1113,7 @@ Choose from the list of available rules:
   Properties MUST not be explicitly initialized with ``null`` except when
   they have a type declaration (PHP 7.4).
 
-* **no_php4_constructor**
+* **no_php4_constructor** [@Symfony:risky, @PhpCsFixer:risky]
 
   Convert PHP4-style constructors to ``__construct``.
 
@@ -1058,10 +1122,6 @@ Choose from the list of available rules:
 * **no_short_bool_cast** [@Symfony, @PhpCsFixer]
 
   Short cast ``bool`` using double exclamation mark should not be used.
-
-* **no_short_echo_tag** [@PhpCsFixer]
-
-  Replace short-echo ``<?=`` with long format ``<?php echo`` syntax.
 
 * **no_singleline_whitespace_before_semicolons** [@Symfony, @PhpCsFixer]
 
@@ -1093,14 +1153,14 @@ Choose from the list of available rules:
 
 * **no_superfluous_phpdoc_tags** [@Symfony, @PhpCsFixer]
 
-  Removes ``@param`` and ``@return`` tags that don't provide any useful
-  information.
+  Removes ``@param``, ``@return`` and ``@var`` tags that don't provide any
+  useful information.
 
   Configuration options:
 
   - ``allow_mixed`` (``bool``): whether type ``mixed`` without description is allowed
     (``true``) or considered superfluous (``false``); defaults to ``false``
-  - ``allow_unused_params`` (``bool``): whether ``param`` annontation without actual
+  - ``allow_unused_params`` (``bool``): whether ``param`` annotation without actual
     signature is allowed (``true``) or considered superfluous (``false``);
     defaults to ``false``
   - ``remove_inheritdoc`` (``bool``): remove ``@inheritDoc`` tags; defaults to ``false``
@@ -1121,6 +1181,12 @@ Choose from the list of available rules:
 
   There MUST be no trailing spaces inside comment or PHPDoc.
 
+* **no_trailing_whitespace_in_string** [@Symfony:risky, @PhpCsFixer:risky]
+
+  There must be no trailing whitespace in strings.
+
+  *Risky rule: changing the whitespaces in strings might affect string comparisons and outputs.*
+
 * **no_unneeded_control_parentheses** [@Symfony, @PhpCsFixer]
 
   Removes unneeded parentheses around control statements.
@@ -1136,9 +1202,22 @@ Choose from the list of available rules:
   Removes unneeded curly braces that are superfluous and aren't part of a
   control structure's body.
 
-* **no_unneeded_final_method** [@Symfony, @PhpCsFixer]
+  Configuration options:
 
-  A final class must not have final methods.
+  - ``namespaces`` (``bool``): remove unneeded curly braces from bracketed
+    namespaces; defaults to ``false``
+
+* **no_unneeded_final_method** [@Symfony:risky, @PhpCsFixer:risky]
+
+  A ``final`` class must not have ``final`` methods and ``private`` methods must
+  not be ``final``.
+
+  *Risky rule: risky when child class overrides a ``private`` method.*
+
+  Configuration options:
+
+  - ``private_methods`` (``bool``): private methods of non-``final`` classes must not
+    be declared ``final``; defaults to ``true``
 
 * **no_unreachable_default_argument_value** [@PhpCsFixer:risky]
 
@@ -1147,7 +1226,7 @@ Choose from the list of available rules:
 
   *Risky rule: modifies the signature of functions; therefore risky when using systems (such as some Symfony components) that rely on those (for example through reflection).*
 
-* **no_unset_cast** [@PhpCsFixer]
+* **no_unset_cast** [@Symfony, @PhpCsFixer]
 
   Variables must be set ``null`` instead of using ``(unset)`` casting.
 
@@ -1183,7 +1262,7 @@ Choose from the list of available rules:
 
   Remove trailing whitespace at the end of blank lines.
 
-* **non_printable_character** [@Symfony:risky, @PhpCsFixer:risky, @PHP70Migration:risky, @PHP71Migration:risky]
+* **non_printable_character** [@Symfony:risky, @PhpCsFixer:risky, @PHP70Migration:risky, @PHP71Migration:risky, @PHP74Migration:risky]
 
   Remove Zero-width space (ZWSP), Non-breaking space (NBSP) and other
   invisible unicode symbols.
@@ -1195,7 +1274,7 @@ Choose from the list of available rules:
   - ``use_escape_sequences_in_strings`` (``bool``): whether characters should be
     replaced with escape sequences in strings; defaults to ``false``
 
-* **normalize_index_brace** [@Symfony, @PhpCsFixer]
+* **normalize_index_brace** [@Symfony, @PhpCsFixer, @PHP74Migration]
 
   Array index should always be written by using square braces.
 
@@ -1272,6 +1351,10 @@ Choose from the list of available rules:
   - ``order`` (``'alpha'``, ``'length'``): how the interfaces should be ordered;
     defaults to ``'alpha'``
 
+* **ordered_traits** [@Symfony, @PhpCsFixer]
+
+  Trait ``use`` statements must be sorted alphabetically.
+
 * **php_unit_construct** [@Symfony:risky, @PhpCsFixer:risky]
 
   PHPUnit assertion method calls like ``->assertSame(true, $foo)`` should be
@@ -1286,7 +1369,7 @@ Choose from the list of available rules:
     defaults to ``['assertEquals', 'assertSame', 'assertNotEquals',
     'assertNotSame']``
 
-* **php_unit_dedicate_assert** [@PHPUnit30Migration:risky, @PHPUnit32Migration:risky, @PHPUnit35Migration:risky, @PHPUnit43Migration:risky, @PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky]
+* **php_unit_dedicate_assert** [@PHPUnit30Migration:risky, @PHPUnit32Migration:risky, @PHPUnit35Migration:risky, @PHPUnit43Migration:risky, @PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   PHPUnit assertions like ``assertInternalType``, ``assertFileExists``, should
   be used over ``assertTrue``.
@@ -1298,7 +1381,7 @@ Choose from the list of available rules:
   - ``target`` (``'3.0'``, ``'3.5'``, ``'5.0'``, ``'5.6'``, ``'newest'``): target version of
     PHPUnit; defaults to ``'newest'``
 
-* **php_unit_dedicate_assert_internal_type** [@PHPUnit75Migration:risky]
+* **php_unit_dedicate_assert_internal_type** [@PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   PHPUnit assertions like ``assertIsArray`` should be used over
   ``assertInternalType``.
@@ -1310,7 +1393,7 @@ Choose from the list of available rules:
   - ``target`` (``'7.5'``, ``'newest'``): target version of PHPUnit; defaults to
     ``'newest'``
 
-* **php_unit_expectation** [@PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky]
+* **php_unit_expectation** [@PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   Usages of ``->setExpectedException*`` methods MUST be replaced by
   ``->expectException*`` methods.
@@ -1319,8 +1402,8 @@ Choose from the list of available rules:
 
   Configuration options:
 
-  - ``target`` (``'5.2'``, ``'5.6'``, ``'newest'``): target version of PHPUnit; defaults to
-    ``'newest'``
+  - ``target`` (``'5.2'``, ``'5.6'``, ``'8.4'``, ``'newest'``): target version of PHPUnit;
+    defaults to ``'newest'``
 
 * **php_unit_fqcn_annotation** [@Symfony, @PhpCsFixer]
 
@@ -1335,7 +1418,7 @@ Choose from the list of available rules:
   - ``types`` (a subset of ``['normal', 'final', 'abstract']``): what types of
     classes to mark as internal; defaults to ``['normal', 'final']``
 
-* **php_unit_method_casing** [@PhpCsFixer]
+* **php_unit_method_casing** [@Symfony, @PhpCsFixer]
 
   Enforce camel (or snake) case for PHPUnit test methods, following
   configuration.
@@ -1345,7 +1428,7 @@ Choose from the list of available rules:
   - ``case`` (``'camel_case'``, ``'snake_case'``): apply camel or snake case to test
     methods; defaults to ``'camel_case'``
 
-* **php_unit_mock** [@PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky]
+* **php_unit_mock** [@PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   Usages of ``->getMock`` and
   ``->getMockWithoutInvokingTheOriginalConstructor`` methods MUST be
@@ -1365,7 +1448,7 @@ Choose from the list of available rules:
 
   *Risky rule: risky when PHPUnit classes are overridden or not accessible, or when project has PHPUnit incompatibilities.*
 
-* **php_unit_namespaced** [@PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky]
+* **php_unit_namespaced** [@PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   PHPUnit classes MUST be used in namespaced version, e.g.
   ``\PHPUnit\Framework\TestCase`` instead of ``\PHPUnit_Framework_TestCase``.
@@ -1377,7 +1460,7 @@ Choose from the list of available rules:
   - ``target`` (``'4.8'``, ``'5.7'``, ``'6.0'``, ``'newest'``): target version of PHPUnit;
     defaults to ``'newest'``
 
-* **php_unit_no_expectation_annotation** [@PHPUnit32Migration:risky, @PHPUnit35Migration:risky, @PHPUnit43Migration:risky, @PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky]
+* **php_unit_no_expectation_annotation** [@PHPUnit32Migration:risky, @PHPUnit35Migration:risky, @PHPUnit43Migration:risky, @PHPUnit48Migration:risky, @PHPUnit50Migration:risky, @PHPUnit52Migration:risky, @PHPUnit54Migration:risky, @PHPUnit55Migration:risky, @PHPUnit56Migration:risky, @PHPUnit57Migration:risky, @PHPUnit60Migration:risky, @PHPUnit75Migration:risky, @PHPUnit84Migration:risky]
 
   Usages of ``@expectedException*`` annotations MUST be replaced by
   ``->setExpectedException*`` methods.
@@ -1390,7 +1473,7 @@ Choose from the list of available rules:
     ``'newest'``
   - ``use_class_const`` (``bool``): use ::class notation; defaults to ``true``
 
-* **php_unit_set_up_tear_down_visibility** [@PhpCsFixer:risky]
+* **php_unit_set_up_tear_down_visibility** [@Symfony:risky, @PhpCsFixer:risky]
 
   Changes the visibility of the ``setUp()`` and ``tearDown()`` functions of
   PHPUnit to ``protected``, to match the PHPUnit TestCase.
@@ -1421,7 +1504,7 @@ Choose from the list of available rules:
     of assertion methods to fix; defaults to ``['assertAttributeEquals',
     'assertAttributeNotEquals', 'assertEquals', 'assertNotEquals']``
 
-* **php_unit_test_annotation** [@PhpCsFixer:risky]
+* **php_unit_test_annotation** [@Symfony:risky, @PhpCsFixer:risky]
 
   Adds or removes @test annotations from tests, following configuration.
 
@@ -1588,7 +1671,7 @@ Choose from the list of available rules:
   EXPERIMENTAL: Takes ``@param`` annotations of non-mixed types and adjusts
   accordingly the function signature. Requires PHP >= 7.0.
 
-  *Risky rule: [1] This rule is EXPERIMENTAL and is not covered with backward compatibility promise. [2] ``@param`` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented.*
+  *Risky rule: this rule is EXPERIMENTAL and [1] is not covered with backward compatibility promise. [2] ``@param`` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented.*
 
   Configuration options:
 
@@ -1600,7 +1683,7 @@ Choose from the list of available rules:
   EXPERIMENTAL: Takes ``@return`` annotation of non-mixed types and adjusts
   accordingly the function signature. Requires PHP >= 7.0.
 
-  *Risky rule: [1] This rule is EXPERIMENTAL and is not covered with backward compatibility promise. [2] ``@return`` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented. [4] ``@inheritdocs`` support is under construction.*
+  *Risky rule: this rule is EXPERIMENTAL and [1] is not covered with backward compatibility promise. [2] ``@return`` annotation is mandatory for the fixer to make changes, signatures of methods without it (no docblock, inheritdocs) will not be fixed. [3] Manual actions are required if inherited signatures are not properly documented. [4] ``@inheritdocs`` support is under construction.*
 
   Configuration options:
 
@@ -1644,15 +1727,16 @@ Choose from the list of available rules:
 
 * **phpdoc_var_without_name** [@Symfony, @PhpCsFixer]
 
-  ``@var`` and ``@type`` annotations should not contain the variable name.
+  ``@var`` and ``@type`` annotations of classy properties should not contain
+  the name.
 
-* **pow_to_exponentiation** [@PHP56Migration:risky, @PHP70Migration:risky, @PHP71Migration:risky]
+* **pow_to_exponentiation** [@Symfony:risky, @PhpCsFixer:risky, @PHP56Migration:risky, @PHP70Migration:risky, @PHP71Migration:risky, @PHP74Migration:risky]
 
   Converts ``pow`` to the ``**`` operator.
 
   *Risky rule: risky when the function ``pow`` is overridden.*
 
-* **protected_to_private** [@PhpCsFixer]
+* **protected_to_private** [@Symfony, @PhpCsFixer]
 
   Converts ``protected`` variables and methods to ``private`` where possible.
 
@@ -1674,7 +1758,7 @@ Choose from the list of available rules:
 
   *Risky rule: this fixer may change your class name, which will break the code that depends on the old name.*
 
-* **random_api_migration** [@PHP70Migration:risky, @PHP71Migration:risky]
+* **random_api_migration** [@PHP70Migration:risky, @PHP71Migration:risky, @PHP74Migration:risky]
 
   Replaces ``rand``, ``srand``, ``getrandmax`` functions calls with their ``mt_*``
   analogs.
@@ -1686,6 +1770,12 @@ Choose from the list of available rules:
   - ``replacements`` (``array``): mapping between replaced functions with the new
     ones; defaults to ``['getrandmax' => 'mt_getrandmax', 'rand' =>
     'mt_rand', 'srand' => 'mt_srand']``
+
+* **regular_callable_call**
+
+  Callables must be called without using ``call_user_func*`` when possible.
+
+  *Risky rule: risky when the ``call_user_func`` or ``call_user_func_array`` function is overridden.*
 
 * **return_assignment** [@PhpCsFixer]
 
@@ -1724,7 +1814,7 @@ Choose from the list of available rules:
 
   *Risky rule: risky when the ``settype`` function is overridden or when used as the 2nd or 3rd expression in a ``for`` loop .*
 
-* **short_scalar_cast** [@Symfony, @PhpCsFixer]
+* **short_scalar_cast** [@Symfony, @PhpCsFixer, @PHP74Migration]
 
   Cast ``(boolean)`` and ``(integer)`` should be written as ``(bool)`` and
   ``(int)``, ``(double)`` and ``(real)`` as ``(float)``, ``(binary)`` as
@@ -1734,6 +1824,11 @@ Choose from the list of available rules:
 
   Converts explicit variables in double-quoted strings and heredoc syntax
   from simple to complex format (``${`` to ``{$``).
+
+* **simplified_if_return**
+
+  Simplify ``if`` control structures that return the boolean result of their
+  condition.
 
 * **simplified_null_return**
 
@@ -1815,7 +1910,7 @@ Choose from the list of available rules:
 
   Lambdas not (indirect) referencing ``$this`` must be declared ``static``.
 
-  *Risky rule: risky when using "->bindTo" on lambdas without referencing to ``$this``.*
+  *Risky rule: risky when using ``->bindTo`` on lambdas without referencing to ``$this``.*
 
 * **strict_comparison** [@PhpCsFixer:risky]
 
@@ -1829,7 +1924,7 @@ Choose from the list of available rules:
 
   *Risky rule: risky when the fixed function is overridden or if the code relies on non-strict usage.*
 
-* **string_line_ending** [@PhpCsFixer:risky]
+* **string_line_ending** [@Symfony:risky, @PhpCsFixer:risky]
 
   All multi-line strings must use correct line ending.
 
@@ -1843,11 +1938,21 @@ Choose from the list of available rules:
 
   Removes extra spaces between colon and case value.
 
+* **switch_continue_to_break** [@Symfony, @PhpCsFixer, @PHP73Migration, @PHP74Migration]
+
+  Switch case must not be ended with ``continue`` but with ``break``.
+
 * **ternary_operator_spaces** [@Symfony, @PhpCsFixer]
 
   Standardize spaces around ternary operator.
 
-* **ternary_to_null_coalescing** [@PHP70Migration, @PHP71Migration, @PHP73Migration]
+* **ternary_to_elvis_operator** [@Symfony:risky, @PhpCsFixer:risky]
+
+  Use the Elvis operator ``?:`` where possible.
+
+  *Risky rule: risky when relying on functions called on both sides of the ``?`` operator.*
+
+* **ternary_to_null_coalescing** [@PHP70Migration, @PHP71Migration, @PHP73Migration, @PHP74Migration]
 
   Use ``null`` coalescing operator ``??`` where possible. Requires PHP >= 7.0.
 
@@ -1869,7 +1974,14 @@ Choose from the list of available rules:
 
   Unary operators should be placed adjacent to their operands.
 
-* **visibility_required** [@PSR2, @Symfony, @PhpCsFixer, @PHP71Migration, @PHP73Migration]
+* **use_arrow_functions** [@PHP74Migration:risky]
+
+  Anonymous functions with one-liner return statement must use arrow
+  functions.
+
+  *Risky rule: risky when using ``isset()`` on outside variables that are not imported with ``use ()``.*
+
+* **visibility_required** [@PSR2, @Symfony, @PhpCsFixer, @PHP71Migration, @PHP73Migration, @PHP74Migration]
 
   Visibility MUST be declared on all properties and methods; ``abstract``
   and ``final`` MUST be declared before the visibility; ``static`` MUST be
@@ -1881,7 +1993,7 @@ Choose from the list of available rules:
     elements to fix (PHP >= 7.1 required for ``const``); defaults to
     ``['property', 'method']``
 
-* **void_return** [@PHP71Migration:risky]
+* **void_return** [@PHP71Migration:risky, @PHP74Migration:risky]
 
   Add ``void`` return type to functions with missing or empty return
   statements, but priority is given to ``@return`` annotations. Requires
@@ -1922,7 +2034,7 @@ Config file
 
 Instead of using command line options to customize the rule, you can save the
 project configuration in a ``.php_cs.dist`` file in the root directory of your project.
-The file must return an instance of `PhpCsFixer\\ConfigInterface <https://github.com/FriendsOfPHP/PHP-CS-Fixer/blob/v2.16.1/src/ConfigInterface.php>`_
+The file must return an instance of `PhpCsFixer\\ConfigInterface <https://github.com/FriendsOfPHP/PHP-CS-Fixer/blob/v2.16.3/src/ConfigInterface.php>`_
 which lets you configure the rules, the files and directories that
 need to be analyzed. You may also create ``.php_cs`` file, which is
 the local configuration that will be used instead of the project configuration. It
@@ -1942,7 +2054,7 @@ The example below will add two rules to the default list of PSR2 set rules:
         ->in(__DIR__)
     ;
 
-    return PhpCsFixer\Config::create()
+    return (new PhpCsFixer\Config())
         ->setRules([
             '@PSR2' => true,
             'strict_param' => true,
@@ -1969,7 +2081,7 @@ The following example shows how to use all ``Symfony`` rules but the ``full_open
         ->in(__DIR__)
     ;
 
-    return PhpCsFixer\Config::create()
+    return (new PhpCsFixer\Config())
         ->setRules([
             '@Symfony' => true,
             'full_opening_tag' => false,
@@ -1984,7 +2096,7 @@ configure them in your config file.
 
     <?php
 
-    return PhpCsFixer\Config::create()
+    return (new PhpCsFixer\Config())
         ->setIndent("\t")
         ->setLineEnding("\r\n")
     ;
@@ -2007,7 +2119,7 @@ Cache can be disabled via ``--using-cache`` option or config file:
 
     <?php
 
-    return PhpCsFixer\Config::create()
+    return (new PhpCsFixer\Config())
         ->setUsingCache(false)
     ;
 
@@ -2017,7 +2129,7 @@ Cache file can be specified via ``--cache-file`` option or config file:
 
     <?php
 
-    return PhpCsFixer\Config::create()
+    return (new PhpCsFixer\Config())
         ->setCacheFile(__DIR__.'/.php_cs.cache')
     ;
 

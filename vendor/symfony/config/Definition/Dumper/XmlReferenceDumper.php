@@ -91,7 +91,7 @@ class XmlReferenceDumper
                 }
 
                 if ($prototype instanceof PrototypedArrayNode) {
-                    $prototype->setName($key);
+                    $prototype->setName($key ?? '');
                     $children = [$key => $prototype];
                 } elseif ($prototype instanceof ArrayNode) {
                     $children = $prototype->getChildren();
@@ -148,7 +148,8 @@ class XmlReferenceDumper
                     }
 
                     if ($child->isDeprecated()) {
-                        $comments[] = sprintf('Deprecated (%s)', $child->getDeprecationMessage($child->getName(), $node->getPath()));
+                        $deprecation = $child->getDeprecation($child->getName(), $node->getPath());
+                        $comments[] = sprintf('Deprecated (%s)', ($deprecation['package'] || $deprecation['version'] ? "Since {$deprecation['package']} {$deprecation['version']}: " : '').$deprecation['message']);
                     }
 
                     if ($child instanceof EnumNode) {

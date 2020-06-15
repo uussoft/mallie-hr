@@ -31,6 +31,7 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
 {
     /** @internal */
     const SORT_ALPHA = 'alpha';
+
     /** @internal */
     const SORT_NONE = 'none';
 
@@ -211,11 +212,12 @@ class Example
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before ClassAttributesSeparationFixer, NoBlankLinesAfterClassOpeningFixer, SpaceAfterSemicolonFixer.
+     * Must run after NoPhp4ConstructorFixer, ProtectedToPrivateFixer.
      */
     public function getPriority()
     {
-        // must run before MethodSeparationFixer, NoBlankLinesAfterClassOpeningFixer and SpaceAfterSemicolonFixer.
-        // must run after ProtectedToPrivateFixer.
         return 65;
     }
 
@@ -232,7 +234,7 @@ class Example
             $i = $tokens->getNextTokenOfKind($i, ['{']);
             $elements = $this->getElements($tokens, $i);
 
-            if (!$elements) {
+            if (0 === \count($elements)) {
                 continue;
             }
 
@@ -336,7 +338,7 @@ class Example
 
                 if ('property' === $element['type']) {
                     $element['name'] = $tokens[$i]->getContent();
-                } elseif (\in_array($element['type'], ['use_trait', 'constant', 'method', 'magic'], true)) {
+                } elseif (\in_array($element['type'], ['use_trait', 'constant', 'method', 'magic', 'construct', 'destruct'], true)) {
                     $element['name'] = $tokens[$tokens->getNextMeaningfulToken($i)]->getContent();
                 }
 

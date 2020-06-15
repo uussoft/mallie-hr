@@ -42,7 +42,7 @@ class RedirectResponse extends Response
             throw new \InvalidArgumentException(sprintf('The HTTP status code is not a redirect ("%s" given).', $status));
         }
 
-        if (301 == $status && !\array_key_exists('cache-control', array_change_key_case($headers, \CASE_LOWER))) {
+        if (301 == $status && !\array_key_exists('cache-control', array_change_key_case($headers, CASE_LOWER))) {
             $this->headers->remove('cache-control');
         }
     }
@@ -53,9 +53,13 @@ class RedirectResponse extends Response
      * @param string $url The URL to redirect to
      *
      * @return static
+     *
+     * @deprecated since Symfony 5.1, use __construct() instead.
      */
     public static function create($url = '', int $status = 302, array $headers = [])
     {
+        trigger_deprecation('symfony/http-foundation', '5.1', 'The "%s()" method is deprecated, use "new %s()" instead.', __METHOD__, \get_called_class());
+
         return new static($url, $status, $headers);
     }
 

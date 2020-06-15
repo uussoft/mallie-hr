@@ -123,10 +123,12 @@ class Foo
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before ArrayIndentationFixer, MethodArgumentSpaceFixer, MethodChainingIndentationFixer.
+     * Must run after ClassAttributesSeparationFixer, ElseifFixer, LineEndingFixer, NoAlternativeSyntaxFixer, NoEmptyStatementFixer, NoUselessElseFixer, SingleTraitInsertPerStatementFixer.
      */
     public function getPriority()
     {
-        // should be run after the ElseIfFixer, LineEndingFixer, NoEmptyStatementFixer and NoUselessElseFixer
         return -25;
     }
 
@@ -157,6 +159,10 @@ class Foo
     protected function createConfigurationDefinition()
     {
         return new FixerConfigurationResolver([
+            (new FixerOptionBuilder('allow_single_line_anonymous_class_with_empty_body', 'Whether single line anonymous class with empty body notation should be allowed.'))
+                ->setAllowedTypes(['bool'])
+                ->setDefault(false)
+                ->getOption(),
             (new FixerOptionBuilder('allow_single_line_closure', 'Whether single line lambda notation should be allowed.'))
                 ->setAllowedTypes(['bool'])
                 ->setDefault(false)
@@ -210,12 +216,15 @@ class Foo
                 continue;
             }
 
+            /** @var Token $tokenTmp */
             $tokenTmp = $tokens[$braceIndex];
 
             $newBraceIndex = $prevIndex + 1;
             for ($i = $braceIndex; $i > $newBraceIndex; --$i) {
                 // we might be moving one white space next to another, these have to be merged
-                $tokens[$i] = $tokens[$i - 1];
+                /** @var Token $previousToken */
+                $previousToken = $tokens[$i - 1];
+                $tokens[$i] = $previousToken;
                 if ($tokens[$i]->isWhitespace() && $tokens[$i + 1]->isWhitespace()) {
                     $tokens[$i] = new Token([T_WHITESPACE, $tokens[$i]->getContent().$tokens[$i + 1]->getContent()]);
                     $tokens->clearAt($i + 1);
@@ -309,6 +318,23 @@ class Foo
                 && $tokensAnalyzer->isWhilePartOfDoWhile($index)
             ) {
                 continue;
+            }
+
+            if (
+                $this->configuration['allow_single_line_anonymous_class_with_empty_body']
+                && $token->isGivenKind(T_CLASS)
+            ) {
+                $prevIndex = $tokens->getPrevMeaningfulToken($index);
+                if ($tokens[$prevIndex]->isGivenKind(T_NEW)) {
+                    $braceStartIndex = $tokens->getNextTokenOfKind($index, ['{']);
+                    $braceEndIndex = $tokens->getNextMeaningfulToken($braceStartIndex);
+
+                    if ('}' === $tokens[$braceEndIndex]->getContent() && !$this->isMultilined($tokens, $index, $braceEndIndex)) {
+                        $index = $braceEndIndex;
+
+                        continue;
+                    }
+                }
             }
 
             if (
@@ -462,7 +488,7 @@ class Foo
                             $whitespace = $nextWhitespace.$this->whitespacesConfig->getLineEnding().$indent;
 
                             if (!$nextNonWhitespaceNestToken->equals('}')) {
-                                $determineIsIndentableBlockContent = function ($contentIndex) use ($tokens) {
+                                $determineIsIndentableBlockContent = static function ($contentIndex) use ($tokens) {
                                     if (!$tokens[$contentIndex]->isComment()) {
                                         return true;
                                     }
@@ -611,7 +637,8 @@ class Foo
             }
 
             $parenthesisEndIndex = $this->findParenthesisEnd($tokens, $index);
-            $tokenAfterParenthesis = $tokens[$tokens->getNextMeaningfulToken($parenthesisEndIndex)];
+            $nextAfterParenthesisEndIndex = $tokens->getNextMeaningfulToken($parenthesisEndIndex);
+            $tokenAfterParenthesis = $tokens[$nextAfterParenthesisEndIndex];
 
             // if Token after parenthesis is { then we do not need to insert brace, but to fix whitespace before it
             if ($tokenAfterParenthesis->equals('{') && self::LINE_SAME === $this->configuration['position_after_control_structures']) {
@@ -625,6 +652,19 @@ class Foo
             // - structure with block, e.g. while ($i) {...}, while ($i) : {...} endwhile;
             if ($tokenAfterParenthesis->equalsAny([';', '{', ':'])) {
                 continue;
+            }
+
+            // do not add for short 'if' followed by alternative loop,
+            // for example: if ($a) while ($b): ? > X < ?php endwhile; ? >
+            if ($tokenAfterParenthesis->isGivenKind([T_FOR, T_FOREACH, T_SWITCH, T_WHILE])) {
+                $tokenAfterParenthesisBlockEnd = $tokens->findBlockEnd( // go to ')'
+                    Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                    $tokens->getNextMeaningfulToken($nextAfterParenthesisEndIndex)
+                );
+
+                if ($tokens[$tokens->getNextMeaningfulToken($tokenAfterParenthesisBlockEnd)]->equals(':')) {
+                    continue;
+                }
             }
 
             $statementEndIndex = $this->findStatementEnd($tokens, $parenthesisEndIndex);
@@ -793,8 +833,6 @@ class Foo
                 return $tokens->getPrevNonWhitespace($index);
             }
         }
-
-        throw new \RuntimeException('Statement end not found.');
     }
 
     private function getControlTokens()
@@ -934,8 +972,8 @@ class Foo
             $tokens[$nextTokenIndex] = new Token([
                 $nextToken->getId(),
                 Preg::replace(
-                    '/(\R)'.$this->detectIndent($tokens, $nextTokenIndex).'/',
-                    '$1'.Preg::replace('/^.*\R([ \t]*)$/s', '$1', $whitespace),
+                    '/(\R)'.$this->detectIndent($tokens, $nextTokenIndex).'(\h*\S+.*)/',
+                    '$1'.Preg::replace('/^.*\R(\h*)$/s', '$1', $whitespace).'$2',
                     $nextToken->getContent()
                 ),
             ]);

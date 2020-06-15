@@ -11,7 +11,7 @@
 
 namespace Symfony\Bundle\MakerBundle\Maker;
 
-use Doctrine\Bundle\MigrationsBundle\Command\DoctrineCommand;
+use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use Symfony\Bundle\MakerBundle\ApplicationAwareMakerInterface;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
@@ -67,13 +67,13 @@ final class MakeMigration extends AbstractMaker implements ApplicationAwareMaker
     {
         $options = ['doctrine:migrations:diff'];
         if (null !== $input->getOption('db')) {
-            $options[] = '--db'.$input->getOption('db');
+            $options[] = '--db='.$input->getOption('db');
         }
         if (null !== $input->getOption('em')) {
             $options[] = '--em='.$input->getOption('em');
         }
         if (null !== $input->getOption('shard')) {
-            $options[] = '--shard'.$input->getOption('shard');
+            $options[] = '--shard='.$input->getOption('shard');
         }
 
         $generateMigrationCommand = $this->application->find('doctrine:migrations:diff');
@@ -120,7 +120,7 @@ final class MakeMigration extends AbstractMaker implements ApplicationAwareMaker
     public function configureDependencies(DependencyBuilder $dependencies)
     {
         $dependencies->addClassDependency(
-            DoctrineCommand::class,
+            DoctrineMigrationsBundle::class,
             'migrations'
         );
     }

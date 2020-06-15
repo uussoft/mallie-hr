@@ -17,7 +17,10 @@ class DoctrineTestCompilerPass implements CompilerPassInterface
         $extension = $container->getExtension('dama_doctrine_test');
         $config = $extension->getProcessedConfig();
 
-        if ($config[Configuration::ENABLE_STATIC_CONNECTION]) {
+        /** @var bool|array $enableStaticConnectionsConfig */
+        $enableStaticConnectionsConfig = $config[Configuration::ENABLE_STATIC_CONNECTION];
+
+        if ($enableStaticConnectionsConfig !== false) {
             $factoryDef = new Definition(StaticConnectionFactory::class);
             $factoryDef
                 ->setDecoratedService('doctrine.dbal.connection_factory')
@@ -37,9 +40,18 @@ class DoctrineTestCompilerPass implements CompilerPassInterface
         }
 
         $connectionNames = array_keys($container->getParameter('doctrine.connections'));
+        if (is_array($enableStaticConnectionsConfig)) {
+            $this->validateConnectionNames(array_keys($enableStaticConnectionsConfig), $connectionNames);
+        }
 
-        foreach ($cacheNames as $cacheName) {
-            foreach ($connectionNames as $name) {
+        foreach ($connectionNames as $name) {
+            if ($enableStaticConnectionsConfig === true
+                || isset($enableStaticConnectionsConfig[$name]) && $enableStaticConnectionsConfig[$name] === true
+            ) {
+                $this->addConnectionOptions($container, $name);
+            }
+
+            foreach ($cacheNames as $cacheName) {
                 $cacheServiceId = sprintf($cacheName, $name);
                 if ($container->hasAlias($cacheServiceId)) {
                     $container->removeAlias($cacheServiceId);
@@ -49,5 +61,22 @@ class DoctrineTestCompilerPass implements CompilerPassInterface
                 $container->setDefinition($cacheServiceId, $cache);
             }
         }
+    }
+
+    private function validateConnectionNames(array $configNames, array $existingNames): void
+    {
+        $unknown = array_diff($configNames, $existingNames);
+
+        if (count($unknown)) {
+            throw new \InvalidArgumentException(sprintf('Unknown doctrine dbal connection name(s): %s.', implode(', ', $unknown)));
+        }
+    }
+
+    private function addConnectionOptions(ContainerBuilder $container, string $name): void
+    {
+        $connectionDefinition = $container->getDefinition(sprintf('doctrine.dbal.%s_connection', $name));
+        $connectionOptions = $connectionDefinition->getArgument(0);
+        $connectionOptions['dama.keep_static'] = true;
+        $connectionDefinition->replaceArgument(0, $connectionOptions);
     }
 }

@@ -45,7 +45,7 @@ final class SecretsListCommand extends Command
     protected function configure()
     {
         $this
-            ->setDescription('Lists all secrets.')
+            ->setDescription('Lists all secrets')
             ->addOption('reveal', 'r', InputOption::VALUE_NONE, 'Display decrypted values alongside names')
             ->setHelp(<<<'EOF'
 The <info>%command.name%</info> command list all stored secrets.
@@ -101,7 +101,7 @@ EOF
         (new SymfonyStyle($input, $output))
             ->table(['Secret', 'Value'] + (null !== $localSecrets ? [2 => 'Local Value'] : []), $rows);
 
-        $io->comment("Local values override secret values.\nUse <info>secrets:set --local</info> to defined them.");
+        $io->comment("Local values override secret values.\nUse <info>secrets:set --local</info> to define them.");
 
         return 0;
     }

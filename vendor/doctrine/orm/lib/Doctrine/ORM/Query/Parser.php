@@ -42,6 +42,8 @@ class Parser
      * READ-ONLY: Maps BUILT-IN string function names to AST class names.
      *
      * @var array
+     *
+     * @psalm-var class-string<Functions\FunctionNode>
      */
     private static $_STRING_FUNCTIONS = [
         'concat'    => Functions\ConcatFunction::class,
@@ -56,6 +58,8 @@ class Parser
      * READ-ONLY: Maps BUILT-IN numeric function names to AST class names.
      *
      * @var array
+     *
+     * @psalm-var class-string<Functions\FunctionNode>
      */
     private static $_NUMERIC_FUNCTIONS = [
         'length'    => Functions\LengthFunction::class,
@@ -80,6 +84,8 @@ class Parser
      * READ-ONLY: Maps BUILT-IN datetime function names to AST class names.
      *
      * @var array
+     *
+     * @psalm-var class-string<Functions\FunctionNode>
      */
     private static $_DATETIME_FUNCTIONS = [
         'current_date'      => Functions\CurrentDateFunction::class,
@@ -171,7 +177,7 @@ class Parser
     /**
      * The custom last tree walker, if any, that is responsible for producing the output.
      *
-     * @var TreeWalker
+     * @var class-string<TreeWalker>
      */
     private $customOutputWalker;
 
@@ -189,7 +195,7 @@ class Parser
     {
         $this->query        = $query;
         $this->em           = $query->getEntityManager();
-        $this->lexer        = new Lexer($query->getDQL());
+        $this->lexer        = new Lexer((string) $query->getDQL());
         $this->parserResult = new ParserResult();
     }
 
@@ -302,7 +308,7 @@ class Parser
      */
     public function match($token)
     {
-        $lookaheadType = $this->lexer->lookahead['type'];
+        $lookaheadType = $this->lexer->lookahead['type'] ?? null;
 
         // Short-circuit on first condition, usually types match
         if ($lookaheadType === $token) {

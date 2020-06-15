@@ -50,7 +50,7 @@ class EncoderFactory implements EncoderFactoryInterface
         }
 
         if (null === $encoderKey) {
-            throw new \RuntimeException(sprintf('No encoder has been configured for account "%s".', \is_object($user) ? \get_class($user) : $user));
+            throw new \RuntimeException(sprintf('No encoder has been configured for account "%s".', \is_object($user) ? get_debug_type($user) : $user));
         }
 
         if (!$this->encoders[$encoderKey] instanceof PasswordEncoderInterface) {
@@ -72,10 +72,10 @@ class EncoderFactory implements EncoderFactoryInterface
             $config = $this->getEncoderConfigFromAlgorithm($config);
         }
         if (!isset($config['class'])) {
-            throw new \InvalidArgumentException(sprintf('"class" must be set in %s.', json_encode($config)));
+            throw new \InvalidArgumentException('"class" must be set in '.json_encode($config));
         }
         if (!isset($config['arguments'])) {
-            throw new \InvalidArgumentException(sprintf('"arguments" must be set in %s.', json_encode($config)));
+            throw new \InvalidArgumentException('"arguments" must be set in '.json_encode($config));
         }
 
         $encoder = new $config['class'](...$config['arguments']);
@@ -144,10 +144,10 @@ class EncoderFactory implements EncoderFactoryInterface
                 return [
                     'class' => Pbkdf2PasswordEncoder::class,
                     'arguments' => [
-                        $config['hash_algorithm'],
-                        $config['encode_as_base64'],
-                        $config['iterations'],
-                        $config['key_length'],
+                        $config['hash_algorithm'] ?? 'sha512',
+                        $config['encode_as_base64'] ?? true,
+                        $config['iterations'] ?? 1000,
+                        $config['key_length'] ?? 40,
                     ],
                 ];
 
@@ -205,8 +205,8 @@ class EncoderFactory implements EncoderFactoryInterface
             'class' => MessageDigestPasswordEncoder::class,
             'arguments' => [
                 $config['algorithm'],
-                $config['encode_as_base64'],
-                $config['iterations'],
+                $config['encode_as_base64'] ?? true,
+                $config['iterations'] ?? 5000,
             ],
         ];
     }

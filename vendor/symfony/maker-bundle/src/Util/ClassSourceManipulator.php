@@ -118,7 +118,7 @@ final class ClassSourceManipulator
             $this->buildAnnotationLine(
                 '@ORM\\Embedded',
                 [
-                    'class' => $className,
+                    'class' => new ClassNameValue($className, $typeHint),
                 ]
             ),
         ];
@@ -392,6 +392,10 @@ final class ClassSourceManipulator
             return $value;
         }
 
+        if ($value instanceof ClassNameValue) {
+            return sprintf('%s::class', $value->getShortName());
+        }
+
         if (\is_array($value)) {
             throw new \Exception('Invalid value: loop before quoting.');
         }
@@ -407,7 +411,7 @@ final class ClassSourceManipulator
         }
 
         $annotationOptions = [
-            'targetEntity' => $relation->getTargetClassName(),
+            'targetEntity' => new ClassNameValue($typeHint, $relation->getTargetClassName()),
         ];
         if ($relation->isOwning()) {
             // sometimes, we don't map the inverse relation
@@ -476,7 +480,7 @@ final class ClassSourceManipulator
         $collectionTypeHint = $this->addUseStatementIfNecessary(Collection::class);
 
         $annotationOptions = [
-            'targetEntity' => $relation->getTargetClassName(),
+            'targetEntity' => new ClassNameValue($typeHint, $relation->getTargetClassName()),
         ];
         if ($relation->isOwning()) {
             // sometimes, we don't map the inverse relation
@@ -687,8 +691,6 @@ final class ClassSourceManipulator
     }
 
     /**
-     * @param string $class
-     *
      * @return string The alias to use when referencing this class
      */
     public function addUseStatementIfNecessary(string $class): string
@@ -837,8 +839,6 @@ final class ClassSourceManipulator
     }
 
     /**
-     * @param callable $filterCallback
-     *
      * @return Node|null
      */
     private function findFirstNode(callable $filterCallback)
@@ -852,9 +852,6 @@ final class ClassSourceManipulator
     }
 
     /**
-     * @param callable $filterCallback
-     * @param array    $ast
-     *
      * @return Node|null
      */
     private function findLastNode(callable $filterCallback, array $ast)
@@ -1045,8 +1042,6 @@ final class ClassSourceManipulator
      * Adds this new node where a new property should go.
      *
      * Useful for adding properties, or adding a constructor.
-     *
-     * @param Node $newNode
      */
     private function addNodeAfterProperties(Node $newNode)
     {

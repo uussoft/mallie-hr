@@ -6,6 +6,7 @@ namespace Doctrine\Common\DataFixtures\Purger;
 
 use Doctrine\Common\DataFixtures\Sorter\TopologicalSorter;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Schema\Identifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use function array_reverse;
@@ -150,7 +151,7 @@ class ORMPurger implements PurgerInterface
             }
 
             if ($this->purgeMode === self::PURGE_MODE_DELETE) {
-                $connection->executeUpdate('DELETE FROM ' . $tbl);
+                $connection->executeUpdate($this->getDeleteFromTableSQL($tbl, $platform));
             } else {
                 $connection->executeUpdate($platform->getTruncateTableSQL($tbl, true));
             }
@@ -238,13 +239,7 @@ class ORMPurger implements PurgerInterface
         return $associationTables;
     }
 
-    /**
-     * @param ClassMetadata    $class
-     * @param AbstractPlatform $platform
-     *
-     * @return string
-     */
-    private function getTableName($class, $platform)
+    private function getTableName(ClassMetadata $class, AbstractPlatform $platform) : string
     {
         if (isset($class->table['schema']) && ! method_exists($class, 'getSchemaName')) {
             return $class->table['schema'] . '.' . $this->em->getConfiguration()->getQuoteStrategy()->getTableName($class, $platform);
@@ -267,5 +262,12 @@ class ORMPurger implements PurgerInterface
         }
 
         return $this->em->getConfiguration()->getQuoteStrategy()->getJoinTableName($assoc, $class, $platform);
+    }
+
+    private function getDeleteFromTableSQL(string $tableName, AbstractPlatform $platform) : string
+    {
+        $tableIdentifier = new Identifier($tableName);
+
+        return 'DELETE FROM ' . $tableIdentifier->getQuotedName($platform);
     }
 }

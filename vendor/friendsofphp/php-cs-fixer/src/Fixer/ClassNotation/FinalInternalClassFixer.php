@@ -72,6 +72,17 @@ final class FinalInternalClassFixer extends AbstractFixer implements Configurabl
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before FinalStaticAccessFixer, SelfStaticAccessorFixer.
+     * Must run after PhpUnitInternalClassFixer.
+     */
+    public function getPriority()
+    {
+        return 0;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function isCandidate(Tokens $tokens)
     {
@@ -151,7 +162,13 @@ final class FinalInternalClassFixer extends AbstractFixer implements Configurabl
             ))
                 ->setAllowedTypes(['array'])
                 ->setAllowedValues($annotationsAsserts)
-                ->setDefault(['@final', '@Entity', '@ORM\Entity'])
+                ->setDefault([
+                    '@final',
+                    '@Entity',
+                    '@ORM\Entity',
+                    '@ORM\Mapping\Entity',
+                    '@Mapping\Entity',
+                ])
                 ->setNormalizer($annotationsNormalizer)
                 ->getOption(),
             (new AliasedFixerOptionBuilder(

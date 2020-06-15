@@ -118,11 +118,13 @@ SAMPLE
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before ArrayIndentationFixer.
+     * Must run after BracesFixer, CombineNestedDirnameFixer, ImplodeCallFixer, MethodChainingIndentationFixer, PowToExponentiationFixer.
      */
     public function getPriority()
     {
-        // must be run after ImplodeCallFixer
-        return -2;
+        return -30;
     }
 
     /**
@@ -308,7 +310,7 @@ SAMPLE
             return false;
         }
 
-        $content = Preg::replace('/\R[ \t]*/', '', $tokens[$index]->getContent());
+        $content = Preg::replace('/\R\h*/', '', $tokens[$index]->getContent());
         if ('' !== $content) {
             $tokens[$index] = new Token([T_WHITESPACE, $content]);
         } else {

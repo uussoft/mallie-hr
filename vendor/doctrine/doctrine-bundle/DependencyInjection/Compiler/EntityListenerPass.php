@@ -6,6 +6,7 @@ use Doctrine\Bundle\DoctrineBundle\Mapping\ContainerEntityListenerResolver;
 use Doctrine\Bundle\DoctrineBundle\Mapping\EntityListenerServiceResolver;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -17,17 +18,20 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class EntityListenerPass implements CompilerPassInterface
 {
+    use PriorityTaggedServiceTrait;
+
     /**
      * {@inheritDoc}
      */
     public function process(ContainerBuilder $container)
     {
-        $resolvers = $container->findTaggedServiceIds('doctrine.orm.entity_listener');
+        $resolvers = $this->findAndSortTaggedServices('doctrine.orm.entity_listener', $container);
 
         $lazyServiceReferencesByResolver = [];
 
-        foreach ($resolvers as $id => $tagAttributes) {
-            foreach ($tagAttributes as $attributes) {
+        foreach ($resolvers as $reference) {
+            $id = $reference->__toString();
+            foreach ($container->getDefinition($id)->getTag('doctrine.orm.entity_listener') as $attributes) {
                 $name          = isset($attributes['entity_manager']) ? $attributes['entity_manager'] : $container->getParameter('doctrine.default_entity_manager');
                 $entityManager = sprintf('doctrine.orm.%s_entity_manager', $name);
 
@@ -62,10 +66,6 @@ class EntityListenerPass implements CompilerPassInterface
                 if (! isset($attributes['lazy']) && $resolverSupportsLazyListeners || $lazyByAttribute) {
                     $listener = $container->findDefinition($id);
 
-                    if ($listener->isAbstract()) {
-                        throw new InvalidArgumentException(sprintf('The service "%s" must not be abstract as this entity listener is lazy-loaded.', $id));
-                    }
-
                     $resolver->addMethodCall('registerService', [$this->getConcreteDefinitionClass($listener, $container, $id), $id]);
 
                     // if the resolver uses the default class we will use a service locator for all listeners
@@ -88,7 +88,7 @@ class EntityListenerPass implements CompilerPassInterface
         }
     }
 
-    private function attachToListener(ContainerBuilder $container, $name, string $class, array $attributes)
+    private function attachToListener(ContainerBuilder $container, string $name, string $class, array $attributes) : void
     {
         $listenerId = sprintf('doctrine.orm.%s_listeners.attach_entity_listeners', $name);
 

@@ -201,9 +201,9 @@ abstract class NumberFormatter
      * @see https://php.net/round
      */
     private static $phpRoundingMap = [
-        self::ROUND_HALFDOWN => \PHP_ROUND_HALF_DOWN,
-        self::ROUND_HALFEVEN => \PHP_ROUND_HALF_EVEN,
-        self::ROUND_HALFUP => \PHP_ROUND_HALF_UP,
+        self::ROUND_HALFDOWN => PHP_ROUND_HALF_DOWN,
+        self::ROUND_HALFEVEN => PHP_ROUND_HALF_EVEN,
+        self::ROUND_HALFUP => PHP_ROUND_HALF_UP,
     ];
 
     /**
@@ -250,8 +250,8 @@ abstract class NumberFormatter
      *                             described in the ICU DecimalFormat or ICU RuleBasedNumberFormat documentation
      *
      * @see https://php.net/numberformatter.create
-     * @see http://www.icu-project.org/apiref/icu4c/classDecimalFormat.html#_details
-     * @see http://www.icu-project.org/apiref/icu4c/classRuleBasedNumberFormat.html#_details
+     * @see https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1DecimalFormat.html#details
+     * @see https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1RuleBasedNumberFormat.html#details
      *
      * @throws MethodArgumentValueNotImplementedException When $locale different than "en" or null is passed
      * @throws MethodArgumentValueNotImplementedException When the $style is not supported
@@ -354,13 +354,13 @@ abstract class NumberFormatter
     {
         // The original NumberFormatter does not support this format type
         if (self::TYPE_CURRENCY === $type) {
-            trigger_error(__METHOD__.'(): Unsupported format type '.$type, \E_USER_WARNING);
+            trigger_error(__METHOD__.'(): Unsupported format type '.$type, E_USER_WARNING);
 
             return false;
         }
 
         if (self::CURRENCY === $this->style) {
-            throw new NotImplementedException(sprintf('%s() method does not support the formatting of currencies (instance with CURRENCY style). %s', __METHOD__, NotImplementedException::INTL_INSTALL_MESSAGE));
+            throw new NotImplementedException(sprintf('"%s()" method does not support the formatting of currencies (instance with CURRENCY style). "%s".', __METHOD__, NotImplementedException::INTL_INSTALL_MESSAGE));
         }
 
         // Only the default type is supported.
@@ -508,7 +508,7 @@ abstract class NumberFormatter
     public function parse(string $value, int $type = self::TYPE_DOUBLE, int &$position = 0)
     {
         if (self::TYPE_DEFAULT === $type || self::TYPE_CURRENCY === $type) {
-            trigger_error(__METHOD__.'(): Unsupported format type '.$type, \E_USER_WARNING);
+            trigger_error(__METHOD__.'(): Unsupported format type '.$type, E_USER_WARNING);
 
             return false;
         }

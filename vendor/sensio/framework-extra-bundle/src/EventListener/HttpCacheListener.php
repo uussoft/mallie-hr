@@ -115,6 +115,18 @@ class HttpCacheListener implements EventSubscriberInterface
             $response->headers->addCacheControlDirective('max-stale', $stale);
         }
 
+        if (!$response->headers->hasCacheControlDirective('stale-while-revalidate') && null !== $staleWhileRevalidate = $configuration->getStaleWhileRevalidate()) {
+            $staleWhileRevalidate = $this->convertToSecondsIfNeeded($staleWhileRevalidate);
+
+            $response->headers->addCacheControlDirective('stale-while-revalidate', $staleWhileRevalidate);
+        }
+
+        if (!$response->headers->hasCacheControlDirective('stale-if-error') && null !== $staleIfError = $configuration->getStaleIfError()) {
+            $staleIfError = $this->convertToSecondsIfNeeded($staleIfError);
+
+            $response->headers->addCacheControlDirective('stale-if-error', $staleIfError);
+        }
+
         if (!$response->headers->has('Expires') && null !== $configuration->getExpires()) {
             $date = \DateTime::createFromFormat('U', strtotime($configuration->getExpires()), new \DateTimeZone('UTC'));
             $response->setExpires($date);
@@ -156,7 +168,7 @@ class HttpCacheListener implements EventSubscriberInterface
     private function getExpressionLanguage()
     {
         if (null === $this->expressionLanguage) {
-            if (!class_exists('Symfony\Component\ExpressionLanguage\ExpressionLanguage')) {
+            if (!class_exists(ExpressionLanguage::class)) {
                 throw new \RuntimeException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
             }
             $this->expressionLanguage = new ExpressionLanguage();

@@ -66,9 +66,13 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         );
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before NoEmptyPhpdocFixer, PhpUnitMethodCasingFixer, PhpdocTrimFixer.
+     */
     public function getPriority()
     {
-        // must be run before the PhpdocSeparationFixer and PhpdocOrderFixer
         return 10;
     }
 
@@ -122,7 +126,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
             $functionNameIndex = $tokens->getNextMeaningfulToken($i);
             $functionName = $tokens[$functionNameIndex]->getContent();
 
-            if ($this->hasTestPrefix($functionName)) {
+            if ($this->hasTestPrefix($functionName) && !$this->hasProperTestAnnotation($tokens, $i)) {
                 $newFunctionName = $this->removeTestPrefix($functionName);
                 $tokens[$functionNameIndex] = new Token([T_STRING, $newFunctionName]);
             }
@@ -191,7 +195,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         $functionNameIndex = $tokens->getNextMeaningfulToken($index);
         $functionName = $tokens[$functionNameIndex]->getContent();
 
-        if ($this->startsWith('test', $functionName)) {
+        if ($this->hasTestPrefix($functionName)) {
             return true;
         }
         // If the function doesn't have test in its name, and no doc block, its not a test
@@ -218,19 +222,6 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         $tokensAnalyzer = new TokensAnalyzer($tokens);
 
         return $tokens[$index]->isGivenKind(T_FUNCTION) && !$tokensAnalyzer->isLambda($index);
-    }
-
-    /**
-     * @param string $needle
-     * @param string $haystack
-     *
-     * @return bool
-     */
-    private function startsWith($needle, $haystack)
-    {
-        $len = \strlen($needle);
-
-        return substr($haystack, 0, $len) === $needle;
     }
 
     /**
@@ -266,17 +257,20 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function hasTestPrefix($functionName)
     {
-        if (!$this->startsWith('test', $functionName)) {
-            return false;
-        }
+        return 0 === strpos($functionName, 'test');
+    }
 
-        if ('test' === $functionName) {
-            return true;
-        }
+    /**
+     * @param int $index
+     *
+     * @return bool
+     */
+    private function hasProperTestAnnotation(Tokens $tokens, $index)
+    {
+        $docBlockIndex = $this->getDocBlockIndex($tokens, $index);
+        $doc = $tokens[$docBlockIndex]->getContent();
 
-        $nextCharacter = $functionName[4];
-
-        return $nextCharacter === strtoupper($nextCharacter);
+        return 1 === Preg::match('/\*\s+@test\b/', $doc);
     }
 
     /**
@@ -286,9 +280,9 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function removeTestPrefix($functionName)
     {
-        $remainder = Preg::replace('/^test_?/', '', $functionName);
+        $remainder = Preg::replace('/^test(?=[A-Z_])_?/', '', $functionName);
 
-        if ('' === $remainder || is_numeric($remainder[0])) {
+        if ('' === $remainder) {
             return $functionName;
         }
 
@@ -458,7 +452,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         $dependsIndex = $this->findWhereDependsFunctionNameStarts($line);
         $dependsFunctionName = implode('', \array_slice($line, $dependsIndex));
 
-        if ($this->startsWith('test', $dependsFunctionName)) {
+        if ($this->hasTestPrefix($dependsFunctionName)) {
             $dependsFunctionName = $this->removeTestPrefix($dependsFunctionName);
         }
         array_splice($line, $dependsIndex);
@@ -475,7 +469,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         $dependsIndex = $this->findWhereDependsFunctionNameStarts($line);
         $dependsFunctionName = implode('', \array_slice($line, $dependsIndex));
 
-        if (!$this->startsWith('test', $dependsFunctionName)) {
+        if (!$this->hasTestPrefix($dependsFunctionName)) {
             $dependsFunctionName = $this->addTestPrefix($dependsFunctionName);
         }
 
