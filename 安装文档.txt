@@ -1,16 +1,19 @@
-1¡¢°²×°Symfony-demo
+1ã€å®‰è£…Symfony-demo
 --composer create-project symfony/symfony-demo
 
-2¡¢°²×°Encore£¬Assets¹ÜÀí
---°²×°Õâ¸öÖ®Ç°±ØĞë°²×°Node.jsºÍYarn°ü¹ÜÀíÆ÷
+å®‰è£…éª¨æ¶
+--composer create-project symfony/skeleton demo
+
+2ã€å®‰è£…Encoreï¼ŒAssetsç®¡ç†
+--å®‰è£…è¿™ä¸ªä¹‹å‰å¿…é¡»å®‰è£…Node.jså’ŒYarnåŒ…ç®¡ç†å™¨
 --composer require symfony/webpack-encore-pack
-±ØĞë°²×°  --yarn install --ignore-engines 
-ĞŞ¸ÄyarnµÄ²Ö¿âµØÖ·¾µÏñ
+å¿…é¡»å®‰è£…  --yarn install --ignore-engines 
+ä¿®æ”¹yarnçš„ä»“åº“åœ°å€é•œåƒ
 yarn config set registry https://registry.npm.taobao.org -g
-ĞŞ¸Änode-sassµÄ¾µÏñ  
+ä¿®æ”¹node-sassçš„é•œåƒ  
 yarn config set sass_binary_site http://cdn.npm.taobao.org/dist/node-sass -g
 
-²Å¿ÉÒÔÊ¹ÓÃ####compile assets once
+æ‰å¯ä»¥ä½¿ç”¨####compile assets once
 ----yarn encore dev
 
 ####or recompile assets automatically when files change
@@ -19,38 +22,37 @@ yarn config set sass_binary_site http://cdn.npm.taobao.org/dist/node-sass -g
 ####on deploy,create a production build
 ----yarn encore production
 
-3¡¢°²×°»·¾³¼ì²é
+3ã€å®‰è£…ç¯å¢ƒæ£€æŸ¥
 composer require symfony/requirements-checker
-¼ì²éÍê³Éºó£¬Ğ¶ÔØ
+æ£€æŸ¥å®Œæˆåï¼Œå¸è½½
 composer remove symfony/requirements-checker
 
-4¡¢ÅäÖÃÍê³ÉÊı¾İ¿â¿ÉÒÔ´´½¨Êı¾İ¿â
+4ã€é…ç½®å®Œæˆæ•°æ®åº“å¯ä»¥åˆ›å»ºæ•°æ®åº“
 php bin/console doctrine:database:create
 
-5¡¢¸ù¾İÊµÌå´´½¨migrations
+5ã€æ ¹æ®å®ä½“åˆ›å»ºmigrations
 php bin/console make:migration
 
-5¡¢Êı¾İÇ¨ÒÆ
+5ã€æ•°æ®è¿ç§»
 php bin/console doctrine:migrations:migrate
 
-6¡¢µ¼Èë»ù´¡Êı¾İ
+6ã€å¯¼å…¥åŸºç¡€æ•°æ®
 php bin/console doctrine:fixtures:load
 
-7¡¢´´½¨ÊµÌå
+7ã€åˆ›å»ºå®ä½“
 php bin/console make:entity
 
 
-
-´´½¨ÃüÁî£º
-php bin/console make:migration  
-
-²éÑ¯Êı¾İ¿â£º
+æŸ¥è¯¢æ•°æ®åº“ï¼š
 php bin/console doctrine:query:sql 'SELECT * FROM product'
 
 
-1¡¢»ñÈ¡¸÷¸öBundleµÄÉèÖÃÖ¸µ¼£º
+1ã€è·å–å„ä¸ªBundleçš„è®¾ç½®æŒ‡å¯¼ï¼š
 php bin/console config:dump-reference  %bundleName%
 
-2¡¢²é¿´Ó¦ÓÃ³ÌĞòÓĞÄÄĞ©·şÎñ
+2ã€æŸ¥çœ‹åº”ç”¨ç¨‹åºæœ‰å“ªäº›æœåŠ¡
 php bin/console debug:autowiring
+
+3ã€æŸ¥çœ‹æ‰€æœ‰çš„è·¯ç”±æƒ…å†µ
+ php bin/console debug:router
 
