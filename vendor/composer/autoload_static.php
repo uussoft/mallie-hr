@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd
+class ComposerStaticInit87de8e7bfa39731a17fb6de3a257615e
 {
     public static $files = array (
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
@@ -466,7 +466,7 @@ class ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd
         ),
         'PackageVersions\\' => 
         array (
-            0 => __DIR__ . '/..' . '/ocramius/package-versions/src/PackageVersions',
+            0 => __DIR__ . '/..' . '/composer/package-versions-deprecated/src/PackageVersions',
         ),
         'Monolog\\' => 
         array (
@@ -490,7 +490,7 @@ class ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd
         ),
         'Egulias\\EmailValidator\\' => 
         array (
-            0 => __DIR__ . '/..' . '/egulias/email-validator/EmailValidator',
+            0 => __DIR__ . '/..' . '/egulias/email-validator/src',
         ),
         'Doctrine\\SqlFormatter\\' => 
         array (
@@ -641,10 +641,10 @@ class ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit6d2df4e607fa2ecfbd3635b7ca7edcdd::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit87de8e7bfa39731a17fb6de3a257615e::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit87de8e7bfa39731a17fb6de3a257615e::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit87de8e7bfa39731a17fb6de3a257615e::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit87de8e7bfa39731a17fb6de3a257615e::$classMap;
 
         }, null, ClassLoader::class);
     }
